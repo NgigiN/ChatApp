@@ -1,0 +1,38 @@
+<!-- static/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Rooms</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div class="container">
+    <div class="rooms-container">
+      <h2>Chat Rooms</h2>
+      <div class="room-buttons">
+        <button class="room-btn" data-room="General">General</button>
+        <button class="room-btn" data-room="Gaming">Gaming</button>
+        <button class="room-btn" data-room="Technology">Technology</button>
+        <button class="room-btn" data-room="Movies">Movies</button>
+        <button class="room-btn" data-room="Music">Music</button>
+        <button class="room-btn" data-room="Random">Random</button>
+      </div>
+    </div>
+
+    <div class="chat-container">
+      <h2 id="current-room">Select a Room</h2>
+      <div id="messages"></div>
+      <form id="message-form" class="message-form">
+        <input type="text" id="message-input" placeholder="Type your message..." disabled>
+        <button type="submit" disabled>Send</button>
+      </form>
+    </div>
+  </div>
+  <script src="/js/main.js"></script>
+</body>
+
+</html>
