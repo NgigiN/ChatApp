@@ -1,6 +1,8 @@
 package chat
 
 import (
+	"chat_app/internal/user"
+	"database/sql"
 	"fmt"
 	"log"
 	"sync"
@@ -8,26 +10,23 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-type Message struct {
-	Type    string `json:"type"`
-	Room    string `json:"room"`
-	Content string `json:"content"`
-	Sender  string `json:"sender"`
-}
-
 type Client struct {
 	conn *websocket.Conn
 	room string
+	db   *sql.DB
+	user *user.User
 }
 
 type Server struct {
 	rooms map[string]*Room
 	mu    sync.RWMutex
+	db    *sql.DB
 }
 
-func NewServer() *Server {
+func NewServer(db *sql.DB) *Server {
 	s := &Server{
 		rooms: make(map[string]*Room),
+		db:    db,
 	}
 
 	// Initialize default rooms
@@ -40,7 +39,7 @@ func NewServer() *Server {
 }
 
 func (s *Server) HandleWS(conn *websocket.Conn) {
-	client := &Client{conn: conn}
+	client := &Client{conn: conn, db: s.db}
 	log.Printf("New client connected: %s", conn.RemoteAddr())
 	defer func() {
 		s.handleClientDisconnect(client)
@@ -61,6 +60,7 @@ func (s *Server) HandleWS(conn *websocket.Conn) {
 			s.handleJoinRoom(client, msg.Room)
 		case "message":
 			if client.room != "" {
+				s.handleMessage(client, msg)
 				msg.Room = client.room
 				msg.Sender = conn.RemoteAddr().String()
 				log.Printf("Handling message in room %s: %s", client.room, msg.Content)
@@ -122,9 +122,21 @@ func (s *Server) handleMessage(client *Client, msg Message) {
 	defer s.mu.RUnlock()
 
 	if room, exists := s.rooms[client.room]; exists {
-		// Fix: Correctly get string representation of remote address
-		msg.Sender = client.conn.RemoteAddr().String()
-		log.Printf("Broadcasting message in room %s: %s", client.room, msg.Content)
+		// Use authenticated user's username as the sender
+		msg.Sender = client.user.Username
+
+		// Save message in the database
+		_, err := s.db.Exec(
+			"INSERT INTO messages (room, sender, content, timestamp) VALUES (?, ?, ?, ?)",
+			client.room, client.user.Username, msg.Content, msg.Timestamp,
+		)
+		if err != nil {
+			log.Printf("Error saving message to the database: %v", err)
+			return
+		}
+
+		// Broadcast message to other clients in the room
+		log.Printf("Broadcasting message in room %s from user %s: %s", client.room, client.user.Username, msg.Content)
 		room.Broadcast(msg)
 	}
 }

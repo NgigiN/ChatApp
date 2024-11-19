@@ -1,0 +1,32 @@
+{
+  "sqltools.connections": [
+    {
+      "mysqlOptions": {
+        "authProtocol": "default",
+        "enableSsl": "Disabled"
+      },
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 3307,
+      "driver": "MySQL",
+      "name": "MYSQL_db",
+      "group": "1",
+      "database": "daystaruniversity",
+      "username": "root"
+    },
+    {
+      "mysqlOptions": {
+        "authProtocol": "default",
+        "enableSsl": "Disabled"
+      },
+      "previewLimit": 50,
+      "server": "localhost",
+      "port": 3306,
+      "driver": "MySQL",
+      "name": "chat_app",
+      "database": "chat_app",
+      "username": "chat",
+      "password": "chat"
+    }
+  ]
+}

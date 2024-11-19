@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Register</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 300px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <h2>Register</h2>
+  <form id="registrationForm">
+    <input type="text" id="username" placeholder="Username" required>
+    <input type="password" id="password" placeholder="Password" required>
+    <button type="submit">Register</button>
+  </form>
+  <p id="message"></p>
+
+  <script>
+    document.getElementById('registrationForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const messageEl = document.getElementById('message');
+
+      try {
+        const response = await fetch('/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+          messageEl.textContent = 'Registration successful. Please login.';
+          setTimeout(() => {
+            window.location.href = '/login.html';
+          }, 2000);
+        } else {
+          messageEl.textContent = data.message || 'Registration failed';
+        }
+      } catch (error) {
+        messageEl.textContent = 'Network error';
+      }
+    });
+  </script>
+</body>
+
+</html>
