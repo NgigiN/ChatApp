@@ -5,12 +5,15 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+
+	"github.com/gorilla/sessions"
 )
+
+var store = sessions.NewCookieStore([]byte("secret"))
 
 func LoginHandler(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == http.MethodGet {
-			// Serve the login HTML page for GET requests
 			http.ServeFile(w, r, "static/login.html")
 			return
 		}
@@ -35,6 +38,14 @@ func LoginHandler(db *sql.DB) http.HandlerFunc {
 
 			if err := VerifyPassword(user.Password, credentials.Password); err != nil {
 				http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+				return
+			}
+
+			session, _ := store.Get(r, "session")
+			session.Values["user"] = credentials.Username
+			if err := session.Save(r, w); err != nil {
+				http.Error(w, "Error saving session", http.StatusInternalServerError)
+				log.Printf("Error saving session: %v", err)
 				return
 			}
 

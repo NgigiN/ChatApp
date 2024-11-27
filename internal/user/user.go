@@ -27,14 +27,17 @@ func CreateUser(db *sql.DB, user *User) error {
 }
 
 func GetUser(db *sql.DB, username string) (*User, error) {
-	var user User
+	user := &User{}
 	err := db.QueryRow("SELECT id, username, password FROM users WHERE username = ?", username).Scan(
 		&user.ID, &user.Username, &user.Password,
 	)
 	if err == sql.ErrNoRows {
 		return nil, errors.New("user not found")
 	}
-	return &user, err
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
 }
 
 func VerifyPassword(storedPassword, providedPassword string) error {

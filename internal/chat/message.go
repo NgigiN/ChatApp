@@ -41,13 +41,13 @@ func (m *Message) Validate() error {
 }
 
 func SaveMessage(db *sql.DB, msg *Message) error {
-	query := "INSERT INTO messages (sender, content, timestamp, room) VALUES (?, ?, ?, ?)"
-	_, err := db.Exec(query, msg.Sender, msg.Content, msg.Timestamp, msg.Room)
+	query := "INSERT INTO messages (room, sender, content, timestamp) VALUES (?, ?, ?, ?)"
+	_, err := db.Exec(query, msg.Room, msg.Sender, msg.Content, msg.Timestamp)
 	return err
 }
 
 func GetMessages(db *sql.DB, room string) ([]Message, error) {
-	query := "SELECT id, sender, content, timestamp FROM messages WHERE room = ? ORDER BY timestamp"
+	query := "SELECT id, sender, content, timestamp, room FROM messages WHERE room = ? ORDER BY timestamp"
 	rows, err := db.Query(query, room)
 	if err != nil {
 		return nil, err
