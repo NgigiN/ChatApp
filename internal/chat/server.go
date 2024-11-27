@@ -74,7 +74,6 @@ func NewServer(db *sql.DB) *Server {
 // }
 
 func (s *Server) HandleWS(conn *websocket.Conn) {
-	// Recover from panics
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("Panic recovered: %v", r)
@@ -83,25 +82,22 @@ func (s *Server) HandleWS(conn *websocket.Conn) {
 		conn.Close()
 	}()
 
-	// Create a default user with a timestamp-based name
+	// Default user
 	defaultUser := &user.User{
 		Username: fmt.Sprintf("User_%d", time.Now().Hour()),
 	}
 
-	// Try to get username from session, fallback to default
+	// Get session
 	session, _ := store.Get(conn.Request(), "session")
-	if username, ok := session.Values["user"].(*string); ok && username != nil {
-		defaultUser.Username = *username
+	if username, ok := session.Values["user"].(string); ok {
+		defaultUser.Username = username
 	}
 
-	// Create client
 	client := &Client{conn: conn, db: s.db, user: defaultUser}
 
-	// Join a default room
 	defaultRoom := "General"
 	s.handleJoinRoom(client, &defaultRoom)
 
-	// Message handling loop
 	for {
 		var msg *Message
 		if err := websocket.JSON.Receive(conn, &msg); err != nil {
@@ -109,11 +105,9 @@ func (s *Server) HandleWS(conn *websocket.Conn) {
 			break
 		}
 
-		// Automatically set sender and timestamp
 		msg.Sender = client.user.Username
 		msg.Timestamp = time.Now()
 
-		// Handle different message types
 		switch msg.Type {
 		case "join":
 			s.handleJoinRoom(client, &msg.Room)
@@ -178,7 +172,7 @@ func (s *Server) handleMessage(client *Client, msg *Message, user *user.User) {
 	}
 
 	roomName := *client.roomName
-	msg.Sender = user.Username
+	msg.Sender = client.user.Username
 	msg.Timestamp = time.Now()
 	msg.Room = roomName
 
