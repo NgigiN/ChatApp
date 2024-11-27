@@ -29,7 +29,7 @@ func NewMessage(msgType, sender, content, room string) *Message {
 
 // Format formats the message for display or logging.
 func (m *Message) Format() string {
-	return "[" + m.Timestamp.Format("15:04:05") + "] " + m.Sender + ": " + m.Content
+	return fmt.Sprintf("[%s] %s: %s", m.Timestamp.Format("15:04:05"), m.Sender, m.Content)
 }
 
 // Validate checks if the message is valid (e.g., not empty).

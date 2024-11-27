@@ -36,16 +36,14 @@ func (r *Room) RemoveClient(client *Client) {
 	log.Printf("Client removed from room %s. Total clients: %d", r.name, len(r.clients))
 }
 
-func (r *Room) Broadcast(msg Message) {
+func (r *Room) Broadcast(msg *Message) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
-	log.Printf("Broadcasting to %d clients in room %s", len(r.clients), r.name)
 	for client := range r.clients {
 		go func(c *Client) {
 			if err := websocket.JSON.Send(c.conn, msg); err != nil {
 				log.Printf("Error sending message to client: %v", err)
-				return
 			}
 		}(client)
 	}
