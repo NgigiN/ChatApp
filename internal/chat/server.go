@@ -134,10 +134,9 @@ func (s *Server) handleJoinRoom(client *Client, roomName *string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	// Remove the client from their current room
+	// Remove the client from the current room
 	if client.roomName != nil {
-		currentRoom, exists := s.rooms[*client.roomName]
-		if exists {
+		if currentRoom, exists := s.rooms[*client.roomName]; exists {
 			currentRoom.RemoveClient(client)
 		}
 	}
@@ -152,17 +151,29 @@ func (s *Server) handleJoinRoom(client *Client, roomName *string) {
 	newRoom.AddClient(client)
 	client.roomName = roomName
 
-	response := &Message{
-		Type:    "join",
-		Room:    *roomName,
-		Content: fmt.Sprintf("Joined room %s", *roomName),
+	// Fetch and send the latest messages
+	messages, err := GetMessages(client.db, *roomName)
+	if err != nil {
+		log.Printf("Error fetching messages: %v", err)
+		return
 	}
-	_ = websocket.JSON.Send(client.conn, response)
+
+	// Send messages as history to the client
+	if err := websocket.JSON.Send(client.conn, messages); err != nil {
+		log.Printf("Error sending message history: %v", err)
+	}
+
+	// Notify user of successful join
+	joinMessage := &Message{
+		Type:    "system",
+		Content: fmt.Sprintf("You have joined the room: %s", *roomName),
+	}
+	_ = websocket.JSON.Send(client.conn, joinMessage)
 }
 
 func (s *Server) handleMessage(client *Client, msg *Message, user *user.User) {
 	if client == nil || client.roomName == nil {
-		log.Println("Client not associated with any room, message ignored")
+		log.Println("Client not in a room, message ignored")
 		return
 	}
 
@@ -171,17 +182,17 @@ func (s *Server) handleMessage(client *Client, msg *Message, user *user.User) {
 	msg.Timestamp = time.Now()
 	msg.Room = roomName
 
+	// Save message in the database
 	if err := SaveMessage(client.db, msg); err != nil {
 		log.Printf("Error saving message: %v", err)
-	}
-
-	room, exists := s.rooms[roomName]
-	if !exists || room == nil {
-		log.Printf("Room %s does not exist, cannot broadcast message", roomName)
 		return
 	}
 
-	room.Broadcast(msg)
+	// Broadcast message to the room
+	room, exists := s.rooms[roomName]
+	if exists {
+		room.Broadcast(msg)
+	}
 }
 
 func (s *Server) handleClientDisconnect(client *Client) {

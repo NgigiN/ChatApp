@@ -46,21 +46,36 @@ func SaveMessage(db *sql.DB, msg *Message) error {
 	return err
 }
 
-func GetMessages(db *sql.DB, room string) ([]Message, error) {
-	query := "SELECT id, sender, content, timestamp, room FROM messages WHERE room = ? ORDER BY timestamp"
+func GetMessages(db *sql.DB, room string) ([]*Message, error) {
+	// Limit the number of messages to prevent overwhelming the client
+	query := "SELECT id, sender, content, timestamp, room FROM messages WHERE room = ? ORDER BY timestamp DESC LIMIT 50"
 	rows, err := db.Query(query, room)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var messages []Message
+	var messages []*Message
 	for rows.Next() {
-		var msg Message
-		if err := rows.Scan(&msg.ID, &msg.Sender, &msg.Content, &msg.Timestamp); err != nil {
+		msg := &Message{}
+		var timestamp []uint8
+		if err := rows.Scan(&msg.ID, &msg.Sender, &msg.Content, &timestamp, &msg.Room); err != nil {
 			return nil, err
 		}
+
+		// Convert timestamp to time.Time
+		msg.Timestamp, err = time.Parse("2006-01-02 15:04:05", string(timestamp))
+		if err != nil {
+			return nil, err
+		}
+
 		messages = append(messages, msg)
 	}
+
+	// Reverse the messages to show oldest first
+	for i, j := 0, len(messages)-1; i < j; i, j = i+1, j-1 {
+		messages[i], messages[j] = messages[j], messages[i]
+	}
+
 	return messages, nil
 }

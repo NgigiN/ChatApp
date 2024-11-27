@@ -21,7 +21,6 @@ class ChatApp {
       this.reconnectAttempts = 0;
       this.appendMessage('Connected to server', 'system');
 
-      // Rejoin room if there was one
       if (this.currentRoom) {
         this.joinRoom(this.currentRoom);
       }
@@ -42,7 +41,6 @@ class ChatApp {
       this.messageInput.disabled = true;
       this.messageForm.querySelector('button').disabled = true;
 
-      // Attempt to reconnect with backoff
       if (this.reconnectAttempts < this.maxReconnectAttempts) {
         const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000);
         this.reconnectAttempts++;
@@ -70,7 +68,6 @@ class ChatApp {
       this.sendMessage();
     });
 
-    // Add input validation
     this.messageInput.addEventListener('input', () => {
       const isEmpty = !this.messageInput.value.trim();
       this.messageForm.querySelector('button').disabled = isEmpty;
@@ -83,8 +80,6 @@ class ChatApp {
       this.currentRoomTitle.textContent = `Room: ${roomName}`;
       this.messageInput.disabled = false;
       this.messageForm.querySelector('button').disabled = !this.messageInput.value.trim();
-
-      // Clear messages when joining new room
       this.messagesContainer.innerHTML = '';
 
       const joinMessage = {
@@ -95,7 +90,6 @@ class ChatApp {
       this.ws.send(JSON.stringify(joinMessage));
       console.log(`Joining room: ${roomName}`);
     } else {
-      console.log('WebSocket is not connected. Cannot join room.');
       this.appendMessage('Cannot join room - connection error', 'system');
     }
   }
@@ -108,8 +102,6 @@ class ChatApp {
         room: this.currentRoom,
         content: content
       };
-
-      console.log('Sending message:', message);
 
       try {
         this.ws.send(JSON.stringify(message));
@@ -125,23 +117,27 @@ class ChatApp {
   handleMessage(message) {
     console.log('Received message:', message);
 
-    // Only handle messages for the current room
-    if (message.room === this.currentRoom || message.type === 'system') {
-      if (message.type === 'system') {
-        this.appendMessage(message.content, 'system');
-      } else if (message.type === 'message') {
-        const sender = message.sender ? message.sender.split(':')[0] : 'Anonymous';
-        const messageText = `${sender}: ${message.content}`;
-        console.log('Displaying message:', messageText);
-        this.appendMessage(messageText, 'user');
-      }
+    if (Array.isArray(message)) {
+      this.messagesContainer.innerHTML = '';
+      message.reverse().forEach(msg => this.renderMessage(msg));
+      return;
+    }
+
+    if (message.room === this.currentRoom) {
+      this.renderMessage(message);
     }
   }
+
+  renderMessage(message) {
+    const sender = message.sender || 'Anonymous';
+    const content = `<strong>${sender}:</strong> ${message.content}`;
+    this.appendMessage(content, 'user');
+  }
+
   appendMessage(content, type = 'user') {
-    console.log('Appending message:', content, 'type:', type);
     const messageElement = document.createElement('div');
     messageElement.className = `message ${type}`;
-    messageElement.textContent = content;
+    messageElement.innerHTML = content; // Use innerHTML to allow formatted content
     this.messagesContainer.appendChild(messageElement);
     this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
   }
