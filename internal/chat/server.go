@@ -42,37 +42,6 @@ func NewServer(db *sql.DB) *Server {
 	return s
 }
 
-// func (s *Server) HandleWS(conn *websocket.Conn) {
-
-// 	defaultUser := &user.User{
-// 		Username: fmt.Sprintf("User_%d", time.Now().Hour()),
-// 	}
-
-// 	client := &Client{conn: conn, db: s.db, user: defaultUser}
-
-// 	defer func() {
-// 		s.handleClientDisconnect(client)
-// 		conn.Close()
-// 	}()
-
-// 	for {
-// 		var msg *Message
-// 		if err := websocket.JSON.Receive(conn, &msg); err != nil {
-// 			log.Printf("Error receiving message: %v", err)
-// 			break
-// 		}
-
-// 		switch msg.Type {
-// 		case "join":
-// 			s.handleJoinRoom(client, &msg.Room)
-// 		case "message":
-// 			if client.roomName != nil {
-// 				s.handleMessage(client, msg, client.user)
-// 			}
-// 		}
-// 	}
-// }
-
 func (s *Server) HandleWS(conn *websocket.Conn) {
 	defer func() {
 		if r := recover(); r != nil {

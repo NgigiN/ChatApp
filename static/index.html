@@ -1,4 +1,3 @@
-<!-- static/index.html -->
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,12 +5,60 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chat Rooms</title>
-  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f0f8ff;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 30px;
+    }
+
+    .rooms-container,
+    .chat-container {
+      background-color: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .room-buttons .room-btn {
+      width: 100%;
+      margin: 5px 0;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+    .room-btn:hover {
+      background-color: #0056b3;
+    }
+
+    #messages {
+      height: 300px;
+      overflow-y: scroll;
+      margin-bottom: 10px;
+      border: 1px solid #ddd;
+      padding: 10px;
+      background: #f9f9f9;
+    }
+
+    .message-form input,
+    .message-form button {
+      margin: 5px 0;
+    }
+  </style>
 </head>
 
 <body>
   <div class="container">
-    <div class="rooms-container">
+    <div class="rooms-container col-md-4">
       <h2>Chat Rooms</h2>
       <div class="room-buttons">
         <button class="room-btn" data-room="General">General</button>
@@ -22,13 +69,12 @@
         <button class="room-btn" data-room="Random">Random</button>
       </div>
     </div>
-
-    <div class="chat-container">
+    <div class="chat-container col-md-7">
       <h2 id="current-room">Select a Room</h2>
       <div id="messages"></div>
       <form id="message-form" class="message-form">
-        <input type="text" id="message-input" placeholder="Type your message..." disabled>
-        <button type="submit" disabled>Send</button>
+        <input type="text" id="message-input" class="form-control" placeholder="Type your message..." disabled>
+        <button type="submit" class="btn btn-primary w-100" disabled>Send</button>
       </form>
     </div>
   </div>
