@@ -9,7 +9,7 @@ import (
 
 var db *sql.DB
 
-func initDB() {
+func InitDB() {
 	var err error
 	dsn := "chat:chat@tcp(127.0.0.1:3306)/chat_app"
 	db, err = sql.Open("mysql", dsn)

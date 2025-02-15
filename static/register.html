@@ -65,9 +65,11 @@
         <label for="password" class="form-label">Password</label>
         <input type="password" class="form-control" id="password" required>
       </div>
-      <button type="submit" class="btn btn-primary w-100">Register</button>
+    <button type="submit" class="btn btn-primary w-100 mb-2">Register</button>
     </form>
-  </div>
+    <button type="button" class="btn btn-secondary w-100" onclick="window.location.href='/static/login.html'">Back to Login</button>
+    <p id="message" style="color:red;"></p>
+    </div>
 
   <script>
     document.getElementById('registrationForm').addEventListener('submit', async (e) => {
@@ -87,7 +89,7 @@
         if (response.ok) {
           messageEl.textContent = 'Registration successful. Please login.';
           setTimeout(() => {
-            window.location.href = '/login.html';
+            window.location.href = '/static/login.html';
           }, 2000);
         } else {
           messageEl.textContent = data.message || 'Registration failed';

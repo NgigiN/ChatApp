@@ -5,8 +5,8 @@ import (
 	"chat_app/internal/user"
 	"database/sql"
 	"log"
-	"net/http"
 
+	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"golang.org/x/net/websocket"
 )
@@ -19,16 +19,20 @@ func main() {
 	defer db.Close()
 
 	server := chat.NewServer(db)
-	http.Handle("/", http.FileServer(http.Dir("static")))
-	http.HandleFunc("/login", user.LoginHandler(db))
-	http.HandleFunc("/register", user.RegisterHandler(db))
 
-	http.Handle("/ws", websocket.Handler(func(conn *websocket.Conn) {
-		server.HandleWS(conn)
-	}))
+	r := gin.Default()
+	r.Static("/static", "./static")
+	r.POST("/login", user.LoginHandler(db))
+	r.POST("/register", user.RegisterHandler(db))
+
+	r.GET("/ws", func(c *gin.Context) {
+		websocket.Handler(func(conn *websocket.Conn) {
+			server.HandleWS(conn)
+		}).ServeHTTP(c.Writer, c.Request)
+	})
 
 	log.Println("Server started at :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := r.Run(":8080"); err != nil {
 		log.Fatal("ListenAndServe: ", err)
 	}
 }

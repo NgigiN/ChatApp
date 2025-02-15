@@ -1,4 +1,3 @@
-// internal/chat/server.go
 package chat
 
 import (
