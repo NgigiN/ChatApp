@@ -1,43 +1,29 @@
 package user
 
 import (
-	"database/sql"
-	"errors"
+	"chat_app/database"
+
+	"gorm.io/gorm"
 
 	"golang.org/x/crypto/bcrypt"
 )
 
-type User struct {
-	ID       int    `json:"id"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-}
-
-func CreateUser(db *sql.DB, user *User) error {
+func CreateUser(db *gorm.DB, user *database.User) error {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
+	user.Password = string(hashedPassword)
 
-	_, err = db.Exec(
-		"INSERT INTO users (username, password) VALUES (?, ?)",
-		user.Username, string(hashedPassword),
-	)
-	return err
+	return db.Create(user).Error
 }
 
-func GetUser(db *sql.DB, username string) (*User, error) {
-	user := &User{}
-	err := db.QueryRow("SELECT id, username, password FROM users WHERE username = ?", username).Scan(
-		&user.ID, &user.Username, &user.Password,
-	)
-	if err == sql.ErrNoRows {
-		return nil, errors.New("user not found")
-	}
-	if err != nil {
+func GetUser(db *gorm.DB, email string) (*database.User, error) {
+	var user database.User
+	if err := db.Where("email=?", email).First(&user).Error; err != nil {
 		return nil, err
 	}
-	return user, nil
+	return &user, nil
 }
 
 func VerifyPassword(storedPassword, providedPassword string) error {

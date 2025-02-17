@@ -3,20 +3,33 @@ package main
 import (
 	"chat_app/internal/chat"
 	"chat_app/internal/user"
-	"database/sql"
+	"fmt"
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
-	_ "github.com/go-sql-driver/mysql"
-	"golang.org/x/net/websocket"
+	"github.com/gorilla/websocket"
+	"github.com/lpernett/godotenv"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 func main() {
-	db, err := sql.Open("mysql", "chat:chat@tcp(127.0.0.1:3306)/chat_app")
+	if err := godotenv.Load(); err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_NAME"),
+		os.Getenv("DB_PORT"))
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatalf("Error opening database: %v", err)
 	}
-	defer db.Close()
 
 	server := chat.NewServer(db)
 
@@ -26,9 +39,13 @@ func main() {
 	r.POST("/register", user.RegisterHandler(db))
 
 	r.GET("/ws", func(c *gin.Context) {
-		websocket.Handler(func(conn *websocket.Conn) {
-			server.HandleWS(conn)
-		}).ServeHTTP(c.Writer, c.Request)
+		upgrader := websocket.Upgrader{}
+		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+		if err != nil {
+			log.Println("Failed to set websocket upgrade: ", err)
+			return
+		}
+		server.HandleWS(conn, c.Request)
 	})
 
 	log.Println("Server started at :8080")

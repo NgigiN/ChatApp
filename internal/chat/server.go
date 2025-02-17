@@ -1,179 +1,232 @@
 package chat
 
 import (
-	"chat_app/internal/user"
-	"database/sql"
+	"chat_app/database"
 	"fmt"
 	"log"
+	"net/http"
 	"sync"
 	"time"
 
 	"github.com/gorilla/sessions"
-	"golang.org/x/net/websocket"
+	"github.com/gorilla/websocket"
+	"gorm.io/gorm"
 )
 
 var store = sessions.NewCookieStore([]byte("secret"))
 
+// ChatRoom extends the database Room with websocket functionality
+type ChatRoom struct {
+	database.Room
+	Clients map[*websocket.Conn]*Client
+	mu      sync.RWMutex
+}
+
 type Client struct {
-	conn     *websocket.Conn
-	roomName *string
-	db       *sql.DB
-	user     *user.User
+	Conn     *websocket.Conn
+	RoomName string
+	DB       *gorm.DB
+	User     *database.User
 }
 
 type Server struct {
-	rooms map[string]*Room
+	rooms map[string]*ChatRoom
 	mu    sync.RWMutex
-	db    *sql.DB
+	db    *gorm.DB
 }
 
-func NewServer(db *sql.DB) *Server {
+type Message struct {
+	database.Message
+}
+
+func NewServer(db *gorm.DB) *Server {
 	s := &Server{
-		rooms: make(map[string]*Room),
+		rooms: make(map[string]*ChatRoom),
 		db:    db,
 	}
 
 	// Initialize default rooms
 	roomNames := []string{"General", "Gaming", "Technology", "Movies", "Music", "Random"}
 	for _, name := range roomNames {
-		s.rooms[name] = NewRoom(name)
+		var dbRoom database.Room
+		if err := db.FirstOrCreate(&dbRoom, database.Room{Name: name}).Error; err != nil {
+			log.Printf("Error creating room %s: %v", name, err)
+			continue
+		}
+
+		// Create chat room
+		s.rooms[name] = &ChatRoom{
+			Room:    dbRoom,
+			Clients: make(map[*websocket.Conn]*Client),
+		}
 	}
+
 	return s
 }
 
-func (s *Server) HandleWS(conn *websocket.Conn) {
+func (s *Server) HandleWS(conn *websocket.Conn, r *http.Request) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Printf("Panic recovered: %v", r)
 		}
-		s.handleClientDisconnect(&Client{conn: conn})
+		s.handleClientDisconnect(&Client{Conn: conn})
 		conn.Close()
 	}()
 
 	// Default user
-	defaultUser := &user.User{
-		Username: fmt.Sprintf("User_%d", time.Now().Hour()),
+	defaultUser := &database.User{
+		FirstName: fmt.Sprintf("User_%d", time.Now().Unix()),
 	}
 
 	// Get session
-	session, _ := store.Get(conn.Request(), "session")
-	if username, ok := session.Values["user"].(string); ok {
-		defaultUser.Username = username
+	session, _ := store.Get(r, "session")
+	if userID, ok := session.Values["user_id"].(uint); ok {
+		var user database.User
+		if err := s.db.First(&user, userID).Error; err == nil {
+			defaultUser = &user
+		}
 	}
 
-	client := &Client{conn: conn, db: s.db, user: defaultUser}
+	client := &Client{
+		Conn: conn,
+		DB:   s.db,
+		User: defaultUser,
+	}
 
 	defaultRoom := "General"
-	s.handleJoinRoom(client, &defaultRoom)
+	s.handleJoinRoom(client, defaultRoom)
 
 	for {
-		var msg *Message
-		if err := websocket.JSON.Receive(conn, &msg); err != nil {
+		var msg database.Message
+		if err := conn.ReadJSON(&msg); err != nil {
 			log.Printf("Error receiving message: %v", err)
 			break
 		}
 
-		msg.Sender = client.user.Username
+		msg.Sender = client.User.FirstName
 		msg.Timestamp = time.Now()
 
 		switch msg.Type {
 		case "join":
-			s.handleJoinRoom(client, &msg.Room)
+			s.handleJoinRoom(client, msg.Room)
 		case "message":
-			if client.roomName != nil {
-				s.handleMessage(client, msg, client.user)
+			if client.RoomName != "" {
+				s.handleMessage(client, &msg)
 			}
 		}
 	}
 }
 
-func (s *Server) handleJoinRoom(client *Client, roomName *string) {
-	if roomName == nil {
-		log.Println("handleJoinRoom: roomName is nil")
-		return
-	}
-
+func (s *Server) handleJoinRoom(client *Client, roomName string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	// Remove the client from the current room
-	if client.roomName != nil {
-		if currentRoom, exists := s.rooms[*client.roomName]; exists {
-			currentRoom.RemoveClient(client)
+	// Remove client from current room
+	if client.RoomName != "" {
+		if currentRoom, exists := s.rooms[client.RoomName]; exists {
+			currentRoom.removeClient(client)
 		}
 	}
 
-	// Join the new room
-	newRoom, exists := s.rooms[*roomName]
+	// Join new room
+	newRoom, exists := s.rooms[roomName]
 	if !exists {
-		log.Printf("Room %s does not exist", *roomName)
+		log.Printf("Room %s does not exist", roomName)
 		return
 	}
 
-	newRoom.AddClient(client)
-	client.roomName = roomName
+	newRoom.addClient(client)
+	client.RoomName = roomName
 
-	// Fetch and send the latest messages
-	messages, err := GetMessages(client.db, *roomName)
-	if err != nil {
+	// Fetch recent messages
+	var messages []database.Message
+	if err := s.db.Where("room_id = ?", newRoom.ID).Order("created_at desc").Limit(50).Find(&messages).Error; err != nil {
 		log.Printf("Error fetching messages: %v", err)
-		return
+	} else {
+		if err := client.Conn.WriteJSON(messages); err != nil {
+			log.Printf("Error sending message history: %v", err)
+		}
 	}
 
-	// Send messages as history to the client
-	if err := websocket.JSON.Send(client.conn, messages); err != nil {
-		log.Printf("Error sending message history: %v", err)
+	// Send join notification
+	joinMsg := database.Message{
+		Type:      "system",
+		Content:   fmt.Sprintf("You have joined the room: %s", roomName),
+		Sender:    client.User.FirstName,
+		Room:      newRoom.Name,
+		Timestamp: time.Now(),
 	}
-
-	// Notify user of successful join
-	joinMessage := &Message{
-		Type:    "system",
-		Content: fmt.Sprintf("You have joined the room: %s", *roomName),
-	}
-	_ = websocket.JSON.Send(client.conn, joinMessage)
+	client.Conn.WriteJSON(joinMsg)
 }
 
-func (s *Server) handleMessage(client *Client, msg *Message, user *user.User) {
-	if client == nil || client.roomName == nil {
+func (cr *ChatRoom) addClient(client *Client) {
+	cr.mu.Lock()
+	defer cr.mu.Unlock()
+	cr.Clients[client.Conn] = client
+	log.Printf("Client added to room %s. Total clients: %d", cr.Name, len(cr.Clients))
+}
+
+func (cr *ChatRoom) removeClient(client *Client) {
+	cr.mu.Lock()
+	defer cr.mu.Unlock()
+	delete(cr.Clients, client.Conn)
+	log.Printf("Client removed from room %s. Total clients: %d", cr.Name, len(cr.Clients))
+}
+
+func (cr *ChatRoom) broadcast(msg *database.Message) {
+	cr.mu.RLock()
+	defer cr.mu.RUnlock()
+
+	for _, client := range cr.Clients {
+		go func(c *Client) {
+			if err := c.Conn.WriteJSON(msg); err != nil {
+				log.Printf("Error sending message to client: %v", err)
+			}
+		}(client)
+	}
+}
+
+func (s *Server) handleMessage(client *Client, msg *database.Message) {
+	if client.RoomName == "" {
 		log.Println("Client not in a room, message ignored")
 		return
 	}
 
-	roomName := *client.roomName
-	msg.Sender = client.user.Username
-	msg.Timestamp = time.Now()
-	msg.Room = roomName
+	room, exists := s.rooms[client.RoomName]
+	if !exists {
+		log.Printf("Room %s does not exist", client.RoomName)
+		return
+	}
 
-	// Save message in the database
-	if err := SaveMessage(client.db, msg); err != nil {
+	// Save message to database
+	if err := s.db.Create(msg).Error; err != nil {
 		log.Printf("Error saving message: %v", err)
 		return
 	}
 
-	// Broadcast message to the room
-	room, exists := s.rooms[roomName]
-	if exists {
-		room.Broadcast(msg)
-	}
+	// Broadcast to room
+	room.broadcast(msg)
 }
 
 func (s *Server) handleClientDisconnect(client *Client) {
-	if client == nil || client.roomName == nil {
+	if client.RoomName == "" {
 		return
 	}
 
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	room, exists := s.rooms[*client.roomName]
-	if exists && client.user != nil {
-		room.RemoveClient(client)
+	room, exists := s.rooms[client.RoomName]
+	if exists && client.User != nil {
+		room.removeClient(client)
 
-		disconnectMsg := &Message{
-			Type:    "system",
-			Room:    *client.roomName,
-			Content: fmt.Sprintf("User %s has left the room", client.user.Username),
+		disconnectMsg := &database.Message{
+			Type:      "system",
+			Content:   fmt.Sprintf("User %s has left the room", client.User.FirstName),
+			Sender:    client.User.FirstName,
+			Room:      room.Name,
+			Timestamp: time.Now(),
 		}
-		room.Broadcast(disconnectMsg)
+		room.broadcast(disconnectMsg)
 	}
 }
