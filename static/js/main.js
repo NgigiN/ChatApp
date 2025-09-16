@@ -63,6 +63,18 @@ class ChatApp {
       });
     });
 
+    // handle create & join custom room
+    const createBtn = document.getElementById('create-room-btn');
+    createBtn.addEventListener('click', () => {
+      const room = document.getElementById('new-room-name').value.trim();
+      if (room) {
+        this.joinRoom(room);
+        document.querySelectorAll('.room-btn').forEach(btn => btn.classList.remove('active'));
+        createBtn.classList.add('active');
+        document.getElementById('new-room-name').value = '';
+      }
+    });
+
     this.messageForm.addEventListener('submit', (e) => {
       e.preventDefault();
       this.sendMessage();

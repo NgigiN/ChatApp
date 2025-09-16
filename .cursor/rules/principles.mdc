@@ -1,0 +1,33 @@
+# Cursor AI Rules for System Project
+
+## General Coding Style
+  - Keep functions and classes small and focused on a single responsibility (SRP).
+  - Avoid code smells like long methods, large classes, or duplication—refactor iteratively.
+  - Prefer objects for behavior and data structures for data; hide internals.
+  - Handle errors with exceptions and context; never return null—use Optionals or equivalents.
+
+## Comments
+- Use minimal comments: Only add them for complex logic (e.g., non-obvious algorithms) or to explain "why" something is done ().
+- No comments for simple/self-explanatory code—make the code readable instead.
+- Avoid TODOs; address issues immediately or create Git issues.
+
+## Testing
+- Always run and write tests before suggesting code changes.
+- Follow Clean Code's unit test principles: Tests must be F.I.R.S.T. (Fast, Independent, Repeatable, Self-Validating, Timely).
+- Aim for 80%+ coverage: Unit tests for core functions (e.g., UV calculation), integration tests for sensor-to-alert flow.
+
+## Error Handling and Reliability
+- For UV system specifics: Handle sensor failures gracefully (e.g., retries, fallbacks to default values).
+- Use logging over print statements; integrate with logging libraries.
+- Ensure concurrency safety if dealing with real-time data streams.
+
+## Performance and Optimization
+- Optimize only if needed —profile first.
+- Keep code simple; avoid premature optimization.
+
+## Refactoring and Generation
+- When generating code, start with a minimal viable implementation, then refine.
+- Suggest Git commits with clear messages after changes.
+- If complexity arises explain trade-offs.
+
+These rules apply to all AI interactions in this project. Ignore if user overrides explicitly.

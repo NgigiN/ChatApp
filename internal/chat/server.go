@@ -81,7 +81,7 @@ func (s *Server) HandleWS(conn *websocket.Conn) {
 			s.handleJoinRoom(client, &msg.Room)
 		case "message":
 			if client.roomName != nil {
-				s.handleMessage(client, msg, client.user)
+				s.handleMessage(client, msg)
 			}
 		}
 	}
@@ -106,10 +106,10 @@ func (s *Server) handleJoinRoom(client *Client, roomName *string) {
 	// Join the new room
 	newRoom, exists := s.rooms[*roomName]
 	if !exists {
-		log.Printf("Room %s does not exist", *roomName)
-		return
+		log.Printf("Room %s does not exist - creating new room", *roomName)
+		s.rooms[*roomName] = NewRoom(*roomName)
+		newRoom = s.rooms[*roomName]
 	}
-
 	newRoom.AddClient(client)
 	client.roomName = roomName
 
@@ -133,7 +133,7 @@ func (s *Server) handleJoinRoom(client *Client, roomName *string) {
 	_ = websocket.JSON.Send(client.conn, joinMessage)
 }
 
-func (s *Server) handleMessage(client *Client, msg *Message, user *user.User) {
+func (s *Server) handleMessage(client *Client, msg *Message) {
 	if client == nil || client.roomName == nil {
 		log.Println("Client not in a room, message ignored")
 		return
