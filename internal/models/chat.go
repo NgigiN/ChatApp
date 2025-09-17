@@ -27,11 +27,11 @@ type Message struct {
 }
 
 type RoomMember struct {
-	ID        int       `json:"id" db:"id"`
-	RoomID    int       `json:"room_id" db:"room_id"`
-	UserID    int       `json:"user_id" db:"user_id"`
-	JoinedAt  time.Time `json:"joined_at" db:"joined_at"`
-	IsActive  bool      `json:"is_active" db:"is_active"`
+	ID       int       `json:"id" db:"id"`
+	RoomID   int       `json:"room_id" db:"room_id"`
+	UserID   int       `json:"user_id" db:"user_id"`
+	JoinedAt time.Time `json:"joined_at" db:"joined_at"`
+	IsActive bool      `json:"is_active" db:"is_active"`
 }
 
 type WebSocketMessage struct {

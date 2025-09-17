@@ -1,8 +1,8 @@
 package services
 
 import (
-	"context"
 	"chat_app/internal/models"
+	"context"
 )
 
 type AuthService interface {

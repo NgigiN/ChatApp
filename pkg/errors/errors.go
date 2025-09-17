@@ -8,14 +8,14 @@ import (
 type ErrorCode string
 
 const (
-	ErrCodeInvalidInput     ErrorCode = "INVALID_INPUT"
-	ErrCodeUnauthorized     ErrorCode = "UNAUTHORIZED"
-	ErrCodeForbidden        ErrorCode = "FORBIDDEN"
-	ErrCodeNotFound         ErrorCode = "NOT_FOUND"
-	ErrCodeConflict         ErrorCode = "CONFLICT"
-	ErrCodeInternalError    ErrorCode = "INTERNAL_ERROR"
-	ErrCodeDatabaseError    ErrorCode = "DATABASE_ERROR"
-	ErrCodeValidationError  ErrorCode = "VALIDATION_ERROR"
+	ErrCodeInvalidInput      ErrorCode = "INVALID_INPUT"
+	ErrCodeUnauthorized      ErrorCode = "UNAUTHORIZED"
+	ErrCodeForbidden         ErrorCode = "FORBIDDEN"
+	ErrCodeNotFound          ErrorCode = "NOT_FOUND"
+	ErrCodeConflict          ErrorCode = "CONFLICT"
+	ErrCodeInternalError     ErrorCode = "INTERNAL_ERROR"
+	ErrCodeDatabaseError     ErrorCode = "DATABASE_ERROR"
+	ErrCodeValidationError   ErrorCode = "VALIDATION_ERROR"
 	ErrCodeRateLimitExceeded ErrorCode = "RATE_LIMIT_EXCEEDED"
 )
 

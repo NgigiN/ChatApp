@@ -15,7 +15,7 @@ type Fields map[string]interface{}
 
 func New(level, format string) *Logger {
 	log := logrus.New()
-	
+
 	// Set log level
 	switch level {
 	case "debug":

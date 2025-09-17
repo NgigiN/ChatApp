@@ -1,8 +1,8 @@
 package repositories
 
 import (
-	"context"
 	"chat_app/internal/models"
+	"context"
 )
 
 type UserRepository interface {
