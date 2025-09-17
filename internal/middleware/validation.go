@@ -146,23 +146,23 @@ func (m *ValidationMiddleware) ValidateMessage() gin.HandlerFunc {
 func (m *ValidationMiddleware) sanitizeString(input string) string {
 	// Remove potentially dangerous characters
 	input = strings.TrimSpace(input)
-	
+
 	// Remove HTML tags
 	htmlTagRegex := regexp.MustCompile(`<[^>]*>`)
 	input = htmlTagRegex.ReplaceAllString(input, "")
-	
+
 	// Remove script tags and javascript
 	scriptRegex := regexp.MustCompile(`(?i)<script[^>]*>.*?</script>`)
 	input = scriptRegex.ReplaceAllString(input, "")
-	
+
 	// Remove javascript: protocol
 	jsProtocolRegex := regexp.MustCompile(`(?i)javascript:`)
 	input = jsProtocolRegex.ReplaceAllString(input, "")
-	
+
 	// Remove SQL injection patterns
 	sqlInjectionRegex := regexp.MustCompile(`(?i)(union|select|insert|update|delete|drop|create|alter|exec|execute)`)
 	input = sqlInjectionRegex.ReplaceAllString(input, "")
-	
+
 	return input
 }
 
@@ -183,10 +183,10 @@ func (m *ValidationMiddleware) isValidPassword(password string) bool {
 	if len(password) < 8 {
 		return false
 	}
-	
+
 	hasLetter := regexp.MustCompile(`[a-zA-Z]`).MatchString(password)
 	hasNumber := regexp.MustCompile(`[0-9]`).MatchString(password)
-	
+
 	return hasLetter && hasNumber
 }
 
@@ -196,13 +196,13 @@ func (m *ValidationMiddleware) isValidMessage(content string) bool {
 	if len(content) == 0 || len(content) > 1000 {
 		return false
 	}
-	
+
 	// Check for excessive whitespace
 	whitespaceRegex := regexp.MustCompile(`\s{10,}`)
 	if whitespaceRegex.MatchString(content) {
 		return false
 	}
-	
+
 	return true
 }
 

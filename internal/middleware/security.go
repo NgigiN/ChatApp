@@ -20,25 +20,25 @@ func (m *SecurityMiddleware) SecurityHeaders() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Prevent clickjacking
 		c.Header("X-Frame-Options", "DENY")
-		
+
 		// Prevent MIME type sniffing
 		c.Header("X-Content-Type-Options", "nosniff")
-		
+
 		// Enable XSS protection
 		c.Header("X-XSS-Protection", "1; mode=block")
-		
+
 		// Strict Transport Security (HTTPS only)
 		c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
-		
+
 		// Content Security Policy
 		c.Header("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:;")
-		
+
 		// Referrer Policy
 		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
-		
+
 		// Permissions Policy
 		c.Header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
-		
+
 		c.Next()
 	}
 }
@@ -46,7 +46,7 @@ func (m *SecurityMiddleware) SecurityHeaders() gin.HandlerFunc {
 func (m *SecurityMiddleware) CORS() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.GetHeader("Origin")
-		
+
 		// Allow specific origins (in production, use environment variables)
 		allowedOrigins := []string{
 			"http://localhost:3000",
@@ -54,7 +54,7 @@ func (m *SecurityMiddleware) CORS() gin.HandlerFunc {
 			"http://127.0.0.1:3000",
 			"http://127.0.0.1:8080",
 		}
-		
+
 		allowed := false
 		for _, allowedOrigin := range allowedOrigins {
 			if origin == allowedOrigin {
@@ -62,22 +62,22 @@ func (m *SecurityMiddleware) CORS() gin.HandlerFunc {
 				break
 			}
 		}
-		
+
 		if allowed {
 			c.Header("Access-Control-Allow-Origin", origin)
 		}
-		
+
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 		c.Header("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization, X-Requested-With")
 		c.Header("Access-Control-Allow-Credentials", "true")
 		c.Header("Access-Control-Max-Age", "86400")
-		
+
 		// Handle preflight requests
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
-		
+
 		c.Next()
 	}
 }
@@ -90,7 +90,7 @@ func (m *SecurityMiddleware) RequestSizeLimit(maxSize int64) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
-		
+
 		c.Next()
 	}
 }
@@ -98,7 +98,7 @@ func (m *SecurityMiddleware) RequestSizeLimit(maxSize int64) gin.HandlerFunc {
 func (m *SecurityMiddleware) IPWhitelist(allowedIPs []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clientIP := c.ClientIP()
-		
+
 		allowed := false
 		for _, allowedIP := range allowedIPs {
 			if clientIP == allowedIP {
@@ -106,14 +106,14 @@ func (m *SecurityMiddleware) IPWhitelist(allowedIPs []string) gin.HandlerFunc {
 				break
 			}
 		}
-		
+
 		if !allowed {
 			m.logger.Warn("IP not whitelisted", "ip", clientIP)
 			c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
 			c.Abort()
 			return
 		}
-		
+
 		c.Next()
 	}
 }
@@ -122,7 +122,7 @@ func (m *SecurityMiddleware) BlockSuspiciousRequests() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userAgent := c.GetHeader("User-Agent")
 		path := c.Request.URL.Path
-		
+
 		// Block requests with suspicious user agents
 		suspiciousUserAgents := []string{
 			"sqlmap",
@@ -132,7 +132,7 @@ func (m *SecurityMiddleware) BlockSuspiciousRequests() gin.HandlerFunc {
 			"zap",
 			"burp",
 		}
-		
+
 		for _, suspicious := range suspiciousUserAgents {
 			if containsIgnoreCase(userAgent, suspicious) {
 				m.logger.Warn("Suspicious user agent blocked", "user_agent", userAgent, "path", path)
@@ -141,7 +141,7 @@ func (m *SecurityMiddleware) BlockSuspiciousRequests() gin.HandlerFunc {
 				return
 			}
 		}
-		
+
 		// Block requests to suspicious paths
 		suspiciousPaths := []string{
 			"/admin",
@@ -151,7 +151,7 @@ func (m *SecurityMiddleware) BlockSuspiciousRequests() gin.HandlerFunc {
 			"/config",
 			"/backup",
 		}
-		
+
 		for _, suspicious := range suspiciousPaths {
 			if containsIgnoreCase(path, suspicious) {
 				m.logger.Warn("Suspicious path blocked", "path", path, "ip", c.ClientIP())
@@ -160,15 +160,15 @@ func (m *SecurityMiddleware) BlockSuspiciousRequests() gin.HandlerFunc {
 				return
 			}
 		}
-		
+
 		c.Next()
 	}
 }
 
 func containsIgnoreCase(s, substr string) bool {
-	return len(s) >= len(substr) && 
-		   (s == substr || 
-		    (len(s) > len(substr) && 
-		     (s[:len(substr)] == substr || 
-		      s[len(s)-len(substr):] == substr)))
+	return len(s) >= len(substr) &&
+		(s == substr ||
+			(len(s) > len(substr) &&
+				(s[:len(substr)] == substr ||
+					s[len(s)-len(substr):] == substr)))
 }

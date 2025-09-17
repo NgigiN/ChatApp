@@ -8,6 +8,7 @@ import (
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/redis/go-redis/v9"
 )
 
 type Config struct {
@@ -145,4 +146,15 @@ func CloseDatabase(db *sql.DB) error {
 		return db.Close()
 	}
 	return nil
+}
+
+// NewRedisClient constructs a Redis client based on configuration
+func NewRedisClient(cfg RedisConfig) *redis.Client {
+	dbIndex := cfg.DB
+	client := redis.NewClient(&redis.Options{
+		Addr:     fmt.Sprintf("%s:%s", cfg.Host, cfg.Port),
+		Password: cfg.Password,
+		DB:       dbIndex,
+	})
+	return client
 }

@@ -1,26 +1,34 @@
 package services
 
 import (
-	"context"
-	"time"
+    "context"
+    "fmt"
+    "time"
 
-	"chat_app/internal/models"
-	"chat_app/internal/repositories"
-	"chat_app/pkg/errors"
+    "chat_app/internal/config"
+    "chat_app/internal/models"
+    "chat_app/internal/repositories"
+    "chat_app/pkg/errors"
+    "chat_app/pkg/utils"
+    "github.com/redis/go-redis/v9"
 )
 
 type messageService struct {
-	messageRepo    repositories.MessageRepository
-	roomRepo       repositories.RoomRepository
-	roomMemberRepo repositories.RoomMemberRepository
+    messageRepo    repositories.MessageRepository
+    roomRepo       repositories.RoomRepository
+    roomMemberRepo repositories.RoomMemberRepository
+    cache          *redis.Client
 }
 
 func NewMessageService(messageRepo repositories.MessageRepository, roomRepo repositories.RoomRepository, roomMemberRepo repositories.RoomMemberRepository) MessageService {
-	return &messageService{
-		messageRepo:    messageRepo,
-		roomRepo:       roomRepo,
-		roomMemberRepo: roomMemberRepo,
-	}
+    cfg := config.Load()
+    redisClient := config.NewRedisClient(cfg.Redis)
+    return &messageService{
+        messageRepo:    messageRepo,
+        roomRepo:       roomRepo,
+        roomMemberRepo: roomMemberRepo,
+        cache:          redisClient,
+    }
 }
 
 func (s *messageService) SendMessage(ctx context.Context, userID int, req *models.SendMessageRequest) (*models.Message, error) {
@@ -65,23 +73,57 @@ func (s *messageService) SendMessage(ctx context.Context, userID int, req *model
 }
 
 func (s *messageService) GetMessages(ctx context.Context, roomID int, limit, offset int) ([]*models.Message, error) {
-	// Check if room exists
-	_, err := s.roomRepo.GetByID(ctx, roomID)
-	if err != nil {
-		return nil, err
-	}
+    // Check if room exists
+    _, err := s.roomRepo.GetByID(ctx, roomID)
+    if err != nil {
+        return nil, err
+    }
 
-	return s.messageRepo.GetByRoomID(ctx, roomID, limit, offset)
+    if s.cache != nil && offset == 0 {
+        cacheKey := fmt.Sprintf("room:%d:messages:recent:%d", roomID, limit)
+        if data, err := s.cache.Get(ctx, cacheKey).Bytes(); err == nil && len(data) > 0 {
+            var msgs []*models.Message
+            if err := utils.MustUnmarshal(data, &msgs); err == nil {
+                return msgs, nil
+            }
+        }
+
+        msgs, err := s.messageRepo.GetByRoomID(ctx, roomID, limit, offset)
+        if err != nil {
+            return nil, err
+        }
+        _ = s.cache.Set(ctx, cacheKey, utils.MustMarshal(msgs), 30*time.Second).Err()
+        return msgs, nil
+    }
+
+    return s.messageRepo.GetByRoomID(ctx, roomID, limit, offset)
 }
 
 func (s *messageService) GetRecentMessages(ctx context.Context, roomID int, limit int) ([]*models.Message, error) {
-	// Check if room exists
-	_, err := s.roomRepo.GetByID(ctx, roomID)
-	if err != nil {
-		return nil, err
-	}
+    // Check if room exists
+    _, err := s.roomRepo.GetByID(ctx, roomID)
+    if err != nil {
+        return nil, err
+    }
 
-	return s.messageRepo.GetRecent(ctx, roomID, limit)
+    if s.cache != nil {
+        cacheKey := fmt.Sprintf("room:%d:messages:recent:%d", roomID, limit)
+        if data, err := s.cache.Get(ctx, cacheKey).Bytes(); err == nil && len(data) > 0 {
+            var msgs []*models.Message
+            if err := utils.MustUnmarshal(data, &msgs); err == nil {
+                return msgs, nil
+            }
+        }
+
+        msgs, err := s.messageRepo.GetRecent(ctx, roomID, limit)
+        if err != nil {
+            return nil, err
+        }
+        _ = s.cache.Set(ctx, cacheKey, utils.MustMarshal(msgs), 30*time.Second).Err()
+        return msgs, nil
+    }
+
+    return s.messageRepo.GetRecent(ctx, roomID, limit)
 }
 
 func (s *messageService) EditMessage(ctx context.Context, messageID, userID int, content string) (*models.Message, error) {

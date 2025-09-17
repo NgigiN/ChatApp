@@ -36,11 +36,11 @@ func NewRateLimitMiddleware(limit int, window time.Duration, logger *logger.Logg
 func (m *RateLimitMiddleware) RateLimit() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		clientIP := c.ClientIP()
-		
+
 		if !m.limiter.Allow(clientIP) {
 			m.logger.Warn("Rate limit exceeded", "ip", clientIP)
 			c.JSON(http.StatusTooManyRequests, gin.H{
-				"error": "Rate limit exceeded",
+				"error":       "Rate limit exceeded",
 				"retry_after": m.limiter.GetRetryAfter(clientIP),
 			})
 			c.Abort()
@@ -60,11 +60,11 @@ func (m *RateLimitMiddleware) RateLimitPerUser() gin.HandlerFunc {
 		}
 
 		key := "user_" + string(rune(userID.(int)))
-		
+
 		if !m.limiter.Allow(key) {
 			m.logger.Warn("User rate limit exceeded", "user_id", userID)
 			c.JSON(http.StatusTooManyRequests, gin.H{
-				"error": "Rate limit exceeded",
+				"error":       "Rate limit exceeded",
 				"retry_after": m.limiter.GetRetryAfter(key),
 			})
 			c.Abort()
@@ -88,11 +88,11 @@ func (m *RateLimitMiddleware) RateLimitPerRoom() gin.HandlerFunc {
 		}
 
 		key := "room_" + roomName
-		
+
 		if !m.limiter.Allow(key) {
 			m.logger.Warn("Room rate limit exceeded", "room", roomName)
 			c.JSON(http.StatusTooManyRequests, gin.H{
-				"error": "Room rate limit exceeded",
+				"error":       "Room rate limit exceeded",
 				"retry_after": m.limiter.GetRetryAfter(key),
 			})
 			c.Abort()
@@ -143,7 +143,7 @@ func (rl *RateLimiter) GetRetryAfter(key string) int {
 	// Find the oldest request within the window
 	now := time.Now()
 	cutoff := now.Add(-rl.window)
-	
+
 	for _, reqTime := range requests {
 		if reqTime.After(cutoff) {
 			retryAfter := int(rl.window.Seconds() - now.Sub(reqTime).Seconds())
@@ -171,7 +171,7 @@ func (rl *RateLimiter) Cleanup() {
 				validRequests = append(validRequests, reqTime)
 			}
 		}
-		
+
 		if len(validRequests) == 0 {
 			delete(rl.requests, key)
 		} else {

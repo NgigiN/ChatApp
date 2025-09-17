@@ -1,22 +1,23 @@
 package user
 
 import (
-    "database/sql"
-    "log"
-    "net/http"
+	"database/sql"
+	"log"
+	"net/http"
 
-    "chat_app/internal/config"
-    "github.com/gin-gonic/gin"
-    "github.com/gorilla/sessions"
+	"chat_app/internal/config"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/sessions"
 )
 
 var store = func() *sessions.CookieStore {
-    cfg := config.Load()
-    cs := sessions.NewCookieStore([]byte(cfg.JWT.SecretKey))
-    cs.Options.HttpOnly = true
-    cs.Options.SameSite = http.SameSiteLaxMode
-    // NOTE: set Secure=true when serving over HTTPS
-    return cs
+	cfg := config.Load()
+	cs := sessions.NewCookieStore([]byte(cfg.JWT.SecretKey))
+	cs.Options.HttpOnly = true
+	cs.Options.SameSite = http.SameSiteLaxMode
+	// NOTE: set Secure=true when serving over HTTPS
+	return cs
 }()
 
 func LoginHandler(db *sql.DB) gin.HandlerFunc {
