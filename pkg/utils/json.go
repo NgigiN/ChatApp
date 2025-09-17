@@ -1,16 +1,14 @@
 package utils
 
 import (
-    "encoding/json"
+	"encoding/json"
 )
 
 func MustMarshal(v interface{}) []byte {
-    b, _ := json.Marshal(v)
-    return b
+	b, _ := json.Marshal(v)
+	return b
 }
 
 func MustUnmarshal(data []byte, v interface{}) error {
-    return json.Unmarshal(data, v)
+	return json.Unmarshal(data, v)
 }
-
-
