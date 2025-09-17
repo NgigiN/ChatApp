@@ -21,7 +21,7 @@ func (r *userRepository) Create(ctx context.Context, user *models.User) error {
 	query := `
 		INSERT INTO users (username, email, password, created_at, updated_at, is_active)
 		VALUES (?, ?, ?, ?, ?, ?)`
-	
+
 	now := time.Now()
 	user.CreatedAt = now
 	user.UpdatedAt = now
@@ -29,7 +29,7 @@ func (r *userRepository) Create(ctx context.Context, user *models.User) error {
 
 	result, err := r.db.ExecContext(ctx, query,
 		user.Username, user.Email, user.Password, user.CreatedAt, user.UpdatedAt, user.IsActive)
-	
+
 	if err != nil {
 		return errors.NewDatabaseError("failed to create user", err)
 	}
@@ -47,12 +47,12 @@ func (r *userRepository) GetByID(ctx context.Context, id int) (*models.User, err
 	query := `
 		SELECT id, username, email, password, created_at, updated_at, is_active
 		FROM users WHERE id = ? AND is_active = true`
-	
+
 	user := &models.User{}
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&user.ID, &user.Username, &user.Email, &user.Password,
 		&user.CreatedAt, &user.UpdatedAt, &user.IsActive)
-	
+
 	if err == sql.ErrNoRows {
 		return nil, errors.NewNotFoundError("user not found", err)
 	}
@@ -67,12 +67,12 @@ func (r *userRepository) GetByUsername(ctx context.Context, username string) (*m
 	query := `
 		SELECT id, username, email, password, created_at, updated_at, is_active
 		FROM users WHERE username = ? AND is_active = true`
-	
+
 	user := &models.User{}
 	err := r.db.QueryRowContext(ctx, query, username).Scan(
 		&user.ID, &user.Username, &user.Email, &user.Password,
 		&user.CreatedAt, &user.UpdatedAt, &user.IsActive)
-	
+
 	if err == sql.ErrNoRows {
 		return nil, errors.NewNotFoundError("user not found", err)
 	}
@@ -87,12 +87,12 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.
 	query := `
 		SELECT id, username, email, password, created_at, updated_at, is_active
 		FROM users WHERE email = ? AND is_active = true`
-	
+
 	user := &models.User{}
 	err := r.db.QueryRowContext(ctx, query, email).Scan(
 		&user.ID, &user.Username, &user.Email, &user.Password,
 		&user.CreatedAt, &user.UpdatedAt, &user.IsActive)
-	
+
 	if err == sql.ErrNoRows {
 		return nil, errors.NewNotFoundError("user not found", err)
 	}
@@ -105,15 +105,15 @@ func (r *userRepository) GetByEmail(ctx context.Context, email string) (*models.
 
 func (r *userRepository) Update(ctx context.Context, user *models.User) error {
 	query := `
-		UPDATE users 
+		UPDATE users
 		SET username = ?, email = ?, password = ?, updated_at = ?, is_active = ?
 		WHERE id = ?`
-	
+
 	user.UpdatedAt = time.Now()
-	
+
 	result, err := r.db.ExecContext(ctx, query,
 		user.Username, user.Email, user.Password, user.UpdatedAt, user.IsActive, user.ID)
-	
+
 	if err != nil {
 		return errors.NewDatabaseError("failed to update user", err)
 	}
@@ -131,7 +131,7 @@ func (r *userRepository) Update(ctx context.Context, user *models.User) error {
 
 func (r *userRepository) Delete(ctx context.Context, id int) error {
 	query := `UPDATE users SET is_active = false, updated_at = ? WHERE id = ?`
-	
+
 	result, err := r.db.ExecContext(ctx, query, time.Now(), id)
 	if err != nil {
 		return errors.NewDatabaseError("failed to delete user", err)
@@ -150,9 +150,9 @@ func (r *userRepository) Delete(ctx context.Context, id int) error {
 
 func (r *userRepository) Exists(ctx context.Context, username, email string) (bool, error) {
 	query := `
-		SELECT COUNT(*) FROM users 
+		SELECT COUNT(*) FROM users
 		WHERE (username = ? OR email = ?) AND is_active = true`
-	
+
 	var count int
 	err := r.db.QueryRowContext(ctx, query, username, email).Scan(&count)
 	if err != nil {

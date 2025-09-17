@@ -21,7 +21,7 @@ func (r *roomRepository) Create(ctx context.Context, room *models.Room) error {
 	query := `
 		INSERT INTO rooms (name, description, is_private, created_by, created_at, updated_at, is_active)
 		VALUES (?, ?, ?, ?, ?, ?, ?)`
-	
+
 	now := time.Now()
 	room.CreatedAt = now
 	room.UpdatedAt = now
@@ -29,7 +29,7 @@ func (r *roomRepository) Create(ctx context.Context, room *models.Room) error {
 
 	result, err := r.db.ExecContext(ctx, query,
 		room.Name, room.Description, room.IsPrivate, room.CreatedBy, room.CreatedAt, room.UpdatedAt, room.IsActive)
-	
+
 	if err != nil {
 		return errors.NewDatabaseError("failed to create room", err)
 	}
@@ -47,12 +47,12 @@ func (r *roomRepository) GetByID(ctx context.Context, id int) (*models.Room, err
 	query := `
 		SELECT id, name, description, is_private, created_by, created_at, updated_at, is_active
 		FROM rooms WHERE id = ? AND is_active = true`
-	
+
 	room := &models.Room{}
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&room.ID, &room.Name, &room.Description, &room.IsPrivate,
 		&room.CreatedBy, &room.CreatedAt, &room.UpdatedAt, &room.IsActive)
-	
+
 	if err == sql.ErrNoRows {
 		return nil, errors.NewNotFoundError("room not found", err)
 	}
@@ -67,12 +67,12 @@ func (r *roomRepository) GetByName(ctx context.Context, name string) (*models.Ro
 	query := `
 		SELECT id, name, description, is_private, created_by, created_at, updated_at, is_active
 		FROM rooms WHERE name = ? AND is_active = true`
-	
+
 	room := &models.Room{}
 	err := r.db.QueryRowContext(ctx, query, name).Scan(
 		&room.ID, &room.Name, &room.Description, &room.IsPrivate,
 		&room.CreatedBy, &room.CreatedAt, &room.UpdatedAt, &room.IsActive)
-	
+
 	if err == sql.ErrNoRows {
 		return nil, errors.NewNotFoundError("room not found", err)
 	}
@@ -86,11 +86,11 @@ func (r *roomRepository) GetByName(ctx context.Context, name string) (*models.Ro
 func (r *roomRepository) GetAll(ctx context.Context, limit, offset int) ([]*models.Room, error) {
 	query := `
 		SELECT id, name, description, is_private, created_by, created_at, updated_at, is_active
-		FROM rooms 
-		WHERE is_active = true 
-		ORDER BY created_at DESC 
+		FROM rooms
+		WHERE is_active = true
+		ORDER BY created_at DESC
 		LIMIT ? OFFSET ?`
-	
+
 	rows, err := r.db.QueryContext(ctx, query, limit, offset)
 	if err != nil {
 		return nil, errors.NewDatabaseError("failed to get rooms", err)
@@ -118,7 +118,7 @@ func (r *roomRepository) GetByUserID(ctx context.Context, userID int) ([]*models
 		INNER JOIN room_members rm ON r.id = rm.room_id
 		WHERE rm.user_id = ? AND r.is_active = true AND rm.is_active = true
 		ORDER BY r.created_at DESC`
-	
+
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, errors.NewDatabaseError("failed to get user rooms", err)
@@ -141,15 +141,15 @@ func (r *roomRepository) GetByUserID(ctx context.Context, userID int) ([]*models
 
 func (r *roomRepository) Update(ctx context.Context, room *models.Room) error {
 	query := `
-		UPDATE rooms 
+		UPDATE rooms
 		SET name = ?, description = ?, is_private = ?, updated_at = ?, is_active = ?
 		WHERE id = ?`
-	
+
 	room.UpdatedAt = time.Now()
-	
+
 	result, err := r.db.ExecContext(ctx, query,
 		room.Name, room.Description, room.IsPrivate, room.UpdatedAt, room.IsActive, room.ID)
-	
+
 	if err != nil {
 		return errors.NewDatabaseError("failed to update room", err)
 	}
@@ -167,7 +167,7 @@ func (r *roomRepository) Update(ctx context.Context, room *models.Room) error {
 
 func (r *roomRepository) Delete(ctx context.Context, id int) error {
 	query := `UPDATE rooms SET is_active = false, updated_at = ? WHERE id = ?`
-	
+
 	result, err := r.db.ExecContext(ctx, query, time.Now(), id)
 	if err != nil {
 		return errors.NewDatabaseError("failed to delete room", err)
@@ -186,7 +186,7 @@ func (r *roomRepository) Delete(ctx context.Context, id int) error {
 
 func (r *roomRepository) Exists(ctx context.Context, name string) (bool, error) {
 	query := `SELECT COUNT(*) FROM rooms WHERE name = ? AND is_active = true`
-	
+
 	var count int
 	err := r.db.QueryRowContext(ctx, query, name).Scan(&count)
 	if err != nil {

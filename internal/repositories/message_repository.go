@@ -21,14 +21,14 @@ func (r *messageRepository) Create(ctx context.Context, message *models.Message)
 	query := `
 		INSERT INTO messages (room_id, user_id, username, content, type, created_at, updated_at)
 		VALUES (?, ?, ?, ?, ?, ?, ?)`
-	
+
 	now := time.Now()
 	message.CreatedAt = now
 	message.UpdatedAt = now
 
 	result, err := r.db.ExecContext(ctx, query,
 		message.RoomID, message.UserID, message.Username, message.Content, message.Type, message.CreatedAt, message.UpdatedAt)
-	
+
 	if err != nil {
 		return errors.NewDatabaseError("failed to create message", err)
 	}
@@ -46,12 +46,12 @@ func (r *messageRepository) GetByID(ctx context.Context, id int) (*models.Messag
 	query := `
 		SELECT id, room_id, user_id, username, content, type, created_at, updated_at
 		FROM messages WHERE id = ?`
-	
+
 	message := &models.Message{}
 	err := r.db.QueryRowContext(ctx, query, id).Scan(
 		&message.ID, &message.RoomID, &message.UserID, &message.Username,
 		&message.Content, &message.Type, &message.CreatedAt, &message.UpdatedAt)
-	
+
 	if err == sql.ErrNoRows {
 		return nil, errors.NewNotFoundError("message not found", err)
 	}
@@ -65,11 +65,11 @@ func (r *messageRepository) GetByID(ctx context.Context, id int) (*models.Messag
 func (r *messageRepository) GetByRoomID(ctx context.Context, roomID int, limit, offset int) ([]*models.Message, error) {
 	query := `
 		SELECT id, room_id, user_id, username, content, type, created_at, updated_at
-		FROM messages 
-		WHERE room_id = ? 
-		ORDER BY created_at DESC 
+		FROM messages
+		WHERE room_id = ?
+		ORDER BY created_at DESC
 		LIMIT ? OFFSET ?`
-	
+
 	rows, err := r.db.QueryContext(ctx, query, roomID, limit, offset)
 	if err != nil {
 		return nil, errors.NewDatabaseError("failed to get messages by room ID", err)
@@ -101,9 +101,9 @@ func (r *messageRepository) GetByRoomName(ctx context.Context, roomName string, 
 		FROM messages m
 		INNER JOIN rooms r ON m.room_id = r.id
 		WHERE r.name = ? AND r.is_active = true
-		ORDER BY m.created_at DESC 
+		ORDER BY m.created_at DESC
 		LIMIT ? OFFSET ?`
-	
+
 	rows, err := r.db.QueryContext(ctx, query, roomName, limit, offset)
 	if err != nil {
 		return nil, errors.NewDatabaseError("failed to get messages by room name", err)
@@ -132,11 +132,11 @@ func (r *messageRepository) GetByRoomName(ctx context.Context, roomName string, 
 func (r *messageRepository) GetRecent(ctx context.Context, roomID int, limit int) ([]*models.Message, error) {
 	query := `
 		SELECT id, room_id, user_id, username, content, type, created_at, updated_at
-		FROM messages 
-		WHERE room_id = ? 
-		ORDER BY created_at DESC 
+		FROM messages
+		WHERE room_id = ?
+		ORDER BY created_at DESC
 		LIMIT ?`
-	
+
 	rows, err := r.db.QueryContext(ctx, query, roomID, limit)
 	if err != nil {
 		return nil, errors.NewDatabaseError("failed to get recent messages", err)
@@ -164,12 +164,12 @@ func (r *messageRepository) GetRecent(ctx context.Context, roomID int, limit int
 
 func (r *messageRepository) Update(ctx context.Context, message *models.Message) error {
 	query := `
-		UPDATE messages 
+		UPDATE messages
 		SET content = ?, updated_at = ?
 		WHERE id = ?`
-	
+
 	message.UpdatedAt = time.Now()
-	
+
 	result, err := r.db.ExecContext(ctx, query, message.Content, message.UpdatedAt, message.ID)
 	if err != nil {
 		return errors.NewDatabaseError("failed to update message", err)
@@ -188,7 +188,7 @@ func (r *messageRepository) Update(ctx context.Context, message *models.Message)
 
 func (r *messageRepository) Delete(ctx context.Context, id int) error {
 	query := `DELETE FROM messages WHERE id = ?`
-	
+
 	result, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return errors.NewDatabaseError("failed to delete message", err)
@@ -207,7 +207,7 @@ func (r *messageRepository) Delete(ctx context.Context, id int) error {
 
 func (r *messageRepository) CountByRoomID(ctx context.Context, roomID int) (int64, error) {
 	query := `SELECT COUNT(*) FROM messages WHERE room_id = ?`
-	
+
 	var count int64
 	err := r.db.QueryRowContext(ctx, query, roomID).Scan(&count)
 	if err != nil {

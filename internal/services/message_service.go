@@ -10,8 +10,8 @@ import (
 )
 
 type messageService struct {
-	messageRepo repositories.MessageRepository
-	roomRepo    repositories.RoomRepository
+	messageRepo    repositories.MessageRepository
+	roomRepo       repositories.RoomRepository
 	roomMemberRepo repositories.RoomMemberRepository
 }
 

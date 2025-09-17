@@ -21,7 +21,7 @@ func (r *roomMemberRepository) AddMember(ctx context.Context, member *models.Roo
 	query := `
 		INSERT INTO room_members (room_id, user_id, joined_at, is_active)
 		VALUES (?, ?, ?, ?)`
-	
+
 	now := time.Now()
 	member.JoinedAt = now
 	member.IsActive = true
@@ -36,7 +36,7 @@ func (r *roomMemberRepository) AddMember(ctx context.Context, member *models.Roo
 
 func (r *roomMemberRepository) RemoveMember(ctx context.Context, roomID, userID int) error {
 	query := `UPDATE room_members SET is_active = false WHERE room_id = ? AND user_id = ?`
-	
+
 	result, err := r.db.ExecContext(ctx, query, roomID, userID)
 	if err != nil {
 		return errors.NewDatabaseError("failed to remove room member", err)
@@ -56,10 +56,10 @@ func (r *roomMemberRepository) RemoveMember(ctx context.Context, roomID, userID 
 func (r *roomMemberRepository) GetMembers(ctx context.Context, roomID int) ([]*models.RoomMember, error) {
 	query := `
 		SELECT id, room_id, user_id, joined_at, is_active
-		FROM room_members 
+		FROM room_members
 		WHERE room_id = ? AND is_active = true
 		ORDER BY joined_at ASC`
-	
+
 	rows, err := r.db.QueryContext(ctx, query, roomID)
 	if err != nil {
 		return nil, errors.NewDatabaseError("failed to get room members", err)
@@ -86,7 +86,7 @@ func (r *roomMemberRepository) GetRoomsByUserID(ctx context.Context, userID int)
 		INNER JOIN room_members rm ON r.id = rm.room_id
 		WHERE rm.user_id = ? AND r.is_active = true AND rm.is_active = true
 		ORDER BY r.created_at DESC`
-	
+
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, errors.NewDatabaseError("failed to get user rooms", err)
@@ -109,9 +109,9 @@ func (r *roomMemberRepository) GetRoomsByUserID(ctx context.Context, userID int)
 
 func (r *roomMemberRepository) IsMember(ctx context.Context, roomID, userID int) (bool, error) {
 	query := `
-		SELECT COUNT(*) FROM room_members 
+		SELECT COUNT(*) FROM room_members
 		WHERE room_id = ? AND user_id = ? AND is_active = true`
-	
+
 	var count int
 	err := r.db.QueryRowContext(ctx, query, roomID, userID).Scan(&count)
 	if err != nil {
@@ -123,7 +123,7 @@ func (r *roomMemberRepository) IsMember(ctx context.Context, roomID, userID int)
 
 func (r *roomMemberRepository) GetMemberCount(ctx context.Context, roomID int) (int64, error) {
 	query := `SELECT COUNT(*) FROM room_members WHERE room_id = ? AND is_active = true`
-	
+
 	var count int64
 	err := r.db.QueryRowContext(ctx, query, roomID).Scan(&count)
 	if err != nil {

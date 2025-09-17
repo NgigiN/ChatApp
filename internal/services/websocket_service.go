@@ -9,6 +9,7 @@ import (
 
 	"chat_app/internal/models"
 	"chat_app/pkg/errors"
+
 	"golang.org/x/net/websocket"
 )
 
@@ -19,7 +20,7 @@ type WebSocketConnection struct {
 }
 
 type websocketService struct {
-	connections map[string]*WebSocketConnection // connection ID -> connection
+	connections map[string]*WebSocketConnection            // connection ID -> connection
 	rooms       map[string]map[string]*WebSocketConnection // room name -> connection ID -> connection
 	mu          sync.RWMutex
 }
@@ -200,7 +201,7 @@ func (s *websocketService) BroadcastMessage(ctx context.Context, message *models
 			break
 		}
 	}
-	
+
 	roomConnections, exists := s.rooms[roomName]
 	if !exists {
 		return errors.NewNotFoundError("room not found", nil)
