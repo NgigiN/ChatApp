@@ -1,11 +1,12 @@
 package handlers
 
 import (
-	"chat_app/internal/middleware"
-	"chat_app/internal/ws"
-	"chat_app/pkg/logger"
+    "chat_app/internal/config"
+    "chat_app/internal/middleware"
+    "chat_app/internal/ws"
+    "chat_app/pkg/logger"
 
-	"github.com/gin-gonic/gin"
+    "github.com/gin-gonic/gin"
 )
 
 func SetupRoutes(router *gin.Engine, db interface{}, redis interface{}, logger *logger.Logger) {
@@ -78,10 +79,13 @@ func SetupRoutes(router *gin.Engine, db interface{}, redis interface{}, logger *
 		}
 	}
 
-	// WebSocket endpoint
-	hub := ws.NewHub()
-	go hub.Run()
-	router.GET("/ws", ws.ServeWS(hub))
+    // WebSocket endpoint with Redis Pub/Sub for cross-instance broadcasting
+    hub := ws.NewHub()
+    cfg := config.Load()
+    redisClient := config.NewRedisClient(cfg.Redis)
+    hub.EnableRedis(redisClient)
+    go hub.Run()
+    router.GET("/ws", ws.ServeWS(hub))
 
 	// Static files
 	router.Static("/static", "./static")
