@@ -1,11 +1,11 @@
 package middleware
 
 import (
-    "fmt"
+	"fmt"
 	"time"
 
+	"chat_app/internal/metrics"
 	"chat_app/pkg/logger"
-    "chat_app/internal/metrics"
 
 	"github.com/gin-gonic/gin"
 )
@@ -58,9 +58,9 @@ func (m *LoggingMiddleware) RequestLogger() gin.HandlerFunc {
 			"username", username,
 		)
 
-        // Metrics
-        metrics.HTTPRequestsTotal.WithLabelValues(c.Request.Method, path,  toStringStatus(status)).Inc()
-        metrics.HTTPRequestDurationSeconds.WithLabelValues(c.Request.Method, path).Observe(latency.Seconds())
+		// Metrics
+		metrics.HTTPRequestsTotal.WithLabelValues(c.Request.Method, path, toStringStatus(status)).Inc()
+		metrics.HTTPRequestDurationSeconds.WithLabelValues(c.Request.Method, path).Observe(latency.Seconds())
 
 		// Log errors
 		if status >= 400 {
