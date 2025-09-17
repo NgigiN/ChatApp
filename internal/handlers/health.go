@@ -94,10 +94,10 @@ func (h *HealthHandler) checkDatabase() error {
 	if h.db == nil {
 		return nil // Database is optional in tests
 	}
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	return h.db.PingContext(ctx)
 }
 
@@ -105,10 +105,10 @@ func (h *HealthHandler) checkRedis() error {
 	if h.redis == nil {
 		return nil // Redis is optional
 	}
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	
+
 	return h.redis.Ping(ctx).Err()
 }
 

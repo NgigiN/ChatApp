@@ -1,7 +1,11 @@
 package ws
 
 import (
-	"sync"
+    "context"
+    "sync"
+
+    "chat_app/internal/metrics"
+    "github.com/redis/go-redis/v9"
 )
 
 type Hub struct {
@@ -10,6 +14,7 @@ type Hub struct {
 	unregister chan *subscription
 	broadcast  chan *messageEnvelope
 	mu         sync.RWMutex
+    pubsub     *redis.Client
 }
 
 type subscription struct {
@@ -49,7 +54,7 @@ func (h *Hub) Run() {
 					}
 				}
 			}
-		case msg := <-h.broadcast:
+        case msg := <-h.broadcast:
 			if clients, ok := h.rooms[msg.room]; ok {
 				for c := range clients {
 					select {
@@ -60,6 +65,10 @@ func (h *Hub) Run() {
 						delete(clients, c)
 					}
 				}
+                metrics.MessagesBroadcastTotal.WithLabelValues(msg.room).Inc()
+                if h.pubsub != nil {
+                    _ = h.pubsub.Publish(context.Background(), "chat:"+msg.room, msg.data).Err()
+                }
 			}
 		}
 	}
@@ -69,4 +78,20 @@ func (h *Hub) Join(room string, c *Client)  { h.register <- &subscription{client
 func (h *Hub) Leave(room string, c *Client) { h.unregister <- &subscription{client: c, room: room} }
 func (h *Hub) Broadcast(room string, payload []byte) {
 	h.broadcast <- &messageEnvelope{room: room, data: payload}
+}
+
+// EnableRedis enables cross-instance broadcasting via Redis Pub/Sub and starts a subscriber.
+func (h *Hub) EnableRedis(client *redis.Client) {
+    h.pubsub = client
+    go func() {
+        if client == nil { return }
+        ctx := context.Background()
+        // subscribe to all chat:* channels
+        p := client.PSubscribe(ctx, "chat:*")
+        ch := p.Channel()
+        for msg := range ch {
+            room := msg.Channel[len("chat:"):]
+            h.broadcast <- &messageEnvelope{room: room, data: []byte(msg.Payload)}
+        }
+    }()
 }

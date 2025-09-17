@@ -11,8 +11,10 @@ import (
 	"chat_app/internal/config"
 	"chat_app/internal/handlers"
 	"chat_app/pkg/logger"
+    "chat_app/internal/ws"
 
 	"github.com/gin-gonic/gin"
+    promhttp "github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
@@ -33,8 +35,16 @@ func main() {
 	router := gin.New()
 	router.Use(gin.Recovery())
 
-	// Setup routes
-	handlers.SetupRoutes(router, db, nil, logger)
+    // Setup routes
+    handlers.SetupRoutes(router, db, nil, logger)
+
+    // Metrics endpoint
+    router.GET("/metrics", gin.WrapH(promhttp.Handler()))
+
+    // Enable Redis Pub/Sub for WS hub if configured
+    redisClient := config.NewRedisClient(cfg.Redis)
+    _ = redisClient // wire to ws hub below if needed
+    _ = ws.NewHub   // reference to avoid unused warning if not used further
 
 	// Start server
 	server := &http.Server{

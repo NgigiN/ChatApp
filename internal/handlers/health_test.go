@@ -15,10 +15,10 @@ func TestHealthCheck(t *testing.T) {
 	// Setup
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	
+
 	logger := logger.New("info", "text")
 	handler := NewHealthHandler(nil, nil, logger)
-	
+
 	router.GET("/health", handler.HealthCheck)
 
 	// Test
@@ -35,10 +35,10 @@ func TestLivenessCheck(t *testing.T) {
 	// Setup
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	
+
 	logger := logger.New("info", "text")
 	handler := NewHealthHandler(nil, nil, logger)
-	
+
 	router.GET("/health/live", handler.LivenessCheck)
 
 	// Test
@@ -55,10 +55,10 @@ func TestReadinessCheck(t *testing.T) {
 	// Setup
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
-	
+
 	logger := logger.New("info", "text")
 	handler := NewHealthHandler(nil, nil, logger)
-	
+
 	router.GET("/health/ready", handler.ReadinessCheck)
 
 	// Test
