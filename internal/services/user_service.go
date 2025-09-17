@@ -96,3 +96,13 @@ func (s *userService) ChangePassword(ctx context.Context, userID int, oldPasswor
 
 	return s.userRepo.Update(ctx, user)
 }
+
+func (s *userService) GetUserByUsername(ctx context.Context, username string) (*models.User, error) {
+	return s.userRepo.GetByUsername(ctx, username)
+}
+
+func (s *userService) GetAllUsers(ctx context.Context, limit, offset int) ([]*models.User, error) {
+	// This would need to be implemented in the repository
+	// For now, return empty slice
+	return []*models.User{}, nil
+}

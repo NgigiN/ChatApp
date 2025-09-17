@@ -17,6 +17,16 @@ func SetupRoutes(router *gin.Engine, db interface{}, redis interface{}, logger *
 	securityMiddleware := middleware.NewSecurityMiddleware(logger)
 	loggingMiddleware := middleware.NewLoggingMiddleware(logger)
 
+	// Initialize services (simplified - in production, use dependency injection)
+	// TODO: Properly initialize services with repositories
+	roomService := &mockRoomService{}
+	userService := &mockUserService{}
+
+	// Initialize handlers
+	roomHandlers := NewRoomHandlers(roomService, userService)
+	moderationHandlers := NewModerationHandlers(roomService, userService)
+	inviteHandlers := NewInviteHandlers(roomService, userService)
+
 	// Apply global middleware
 	router.Use(loggingMiddleware.RequestLogger())
 	router.Use(securityMiddleware.SecurityHeaders())
@@ -56,14 +66,31 @@ func SetupRoutes(router *gin.Engine, db interface{}, redis interface{}, logger *
 			rooms := protected.Group("/rooms")
 			rooms.Use(rateLimitMiddleware.RateLimit())
 			{
-				rooms.GET("/")
-				rooms.POST("/", validationMiddleware.ValidateMessage())
-				rooms.GET("/:id")
-				rooms.PUT("/:id")
-				rooms.DELETE("/:id")
-				rooms.POST("/:id/join")
-				rooms.DELETE("/:id/leave")
-				rooms.GET("/:id/members")
+				// Room management
+				rooms.GET("/", roomHandlers.GetUserRooms)           // Get user's rooms
+				rooms.POST("/", roomHandlers.CreateRoom)            // Create new room
+				rooms.GET("/:id", roomHandlers.GetRoom)             // Get room details
+				rooms.PUT("/:id", roomHandlers.UpdateRoom)          // Update room
+				rooms.DELETE("/:id", roomHandlers.DeleteRoom)       // Delete room
+				rooms.POST("/:id/join", roomHandlers.JoinRoom)      // Join room
+				rooms.DELETE("/:id/leave", roomHandlers.LeaveRoom)  // Leave room
+				rooms.GET("/:id/members", roomHandlers.GetRoomMembers) // Get room members
+				
+				// Moderation routes
+				moderation := rooms.Group("/:id/moderation")
+				{
+					moderation.POST("/remove", moderationHandlers.RemoveUser)     // Remove user from room
+					moderation.POST("/reset", moderationHandlers.ResetRoom)       // Reset room (remove all members)
+					moderation.GET("/permissions", moderationHandlers.GetRoomPermissions) // Get user permissions
+				}
+				
+				// Invite routes (for private rooms)
+				invites := rooms.Group("/:id/invites")
+				{
+					invites.POST("/", inviteHandlers.InviteUser)                    // Invite single user
+					invites.POST("/bulk", inviteHandlers.InviteMultipleUsers)       // Invite multiple users
+					invites.GET("/users", inviteHandlers.GetInvitableUsers)        // Get invitable users
+				}
 			}
 
 			// Message routes

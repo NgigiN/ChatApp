@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chat Rooms</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
     body {
       background-color: #f0f8ff;
@@ -59,7 +60,12 @@
 <body>
   <div class="container">
     <div class="rooms-container col-md-4">
-      <h2>Chat Rooms</h2>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Chat Rooms</h2>
+        <a href="/rooms.html" class="btn btn-outline-primary btn-sm">
+          <i class="fas fa-cog"></i> Manage Rooms
+        </a>
+      </div>
       <div class="room-buttons">
         <button class="room-btn" data-room="General">General</button>
         <button class="room-btn" data-room="Gaming">Gaming</button>

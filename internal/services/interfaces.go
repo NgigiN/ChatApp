@@ -18,6 +18,8 @@ type UserService interface {
 	UpdateProfile(ctx context.Context, userID int, updates map[string]interface{}) (*models.User, error)
 	DeactivateAccount(ctx context.Context, userID int) error
 	ChangePassword(ctx context.Context, userID int, oldPassword, newPassword string) error
+	GetUserByUsername(ctx context.Context, username string) (*models.User, error)
+	GetAllUsers(ctx context.Context, limit, offset int) ([]*models.User, error)
 }
 
 type RoomService interface {
