@@ -134,10 +134,10 @@ func (h *ModerationHandlers) GetRoomPermissions(c *gin.Context) {
 	}
 
 	permissions := map[string]bool{
-		"is_creator": room.CreatedBy == userIDInt,
-		"can_moderate": room.CreatedBy == userIDInt,
+		"is_creator":       room.CreatedBy == userIDInt,
+		"can_moderate":     room.CreatedBy == userIDInt,
 		"can_remove_users": room.CreatedBy == userIDInt,
-		"can_reset_room": room.CreatedBy == userIDInt,
+		"can_reset_room":   room.CreatedBy == userIDInt,
 	}
 
 	SuccessResponse(c, permissions, "Room permissions retrieved successfully")

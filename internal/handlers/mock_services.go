@@ -1,8 +1,8 @@
 package handlers
 
 import (
-	"context"
 	"chat_app/internal/models"
+	"context"
 )
 
 // Mock services for development - replace with real implementations

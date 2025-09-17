@@ -2,6 +2,7 @@ class RoomManager {
     constructor() {
         this.rooms = [];
         this.currentUser = null;
+        this.isLoading = false;
         this.init();
     }
 
@@ -52,45 +53,60 @@ class RoomManager {
     }
 
     async loadRooms() {
+        if (this.isLoading) return;
+        
         try {
+            this.isLoading = true;
             this.showLoading();
             
-            // Mock data - in real app, fetch from /api/v1/rooms
-            this.rooms = [
-                {
-                    id: 1,
-                    name: 'Math 101 - Calculus',
-                    description: 'Introduction to Calculus and Differential Equations',
-                    is_private: false,
-                    created_by: 1,
-                    member_count: 25,
-                    is_creator: true
-                },
-                {
-                    id: 2,
-                    name: 'Physics Lab',
-                    description: 'Advanced Physics Laboratory Sessions',
-                    is_private: true,
-                    created_by: 1,
-                    member_count: 12,
-                    is_creator: true
-                },
-                {
-                    id: 3,
-                    name: 'Chemistry Study Group',
-                    description: 'Organic Chemistry Study and Discussion',
-                    is_private: false,
-                    created_by: 2,
-                    member_count: 18,
-                    is_creator: false
-                }
-            ];
+            // Try to fetch from API first
+            const response = await Utils.apiRequest('/api/v1/rooms');
+            
+            if (response.success) {
+                this.rooms = response.data;
+            } else {
+                // Fallback to mock data
+                this.rooms = [
+                    {
+                        id: 1,
+                        name: 'Math 101 - Calculus',
+                        description: 'Introduction to Calculus and Differential Equations',
+                        is_private: false,
+                        created_by: 1,
+                        member_count: 25,
+                        is_creator: true,
+                        created_at: new Date().toISOString()
+                    },
+                    {
+                        id: 2,
+                        name: 'Physics Lab',
+                        description: 'Advanced Physics Laboratory Sessions',
+                        is_private: true,
+                        created_by: 1,
+                        member_count: 12,
+                        is_creator: true,
+                        created_at: new Date().toISOString()
+                    },
+                    {
+                        id: 3,
+                        name: 'Chemistry Study Group',
+                        description: 'Organic Chemistry Study and Discussion',
+                        is_private: false,
+                        created_by: 2,
+                        member_count: 18,
+                        is_creator: false,
+                        created_at: new Date().toISOString()
+                    }
+                ];
+            }
 
             this.renderRooms();
             this.updateStatistics();
         } catch (error) {
             console.error('Error loading rooms:', error);
-            this.showError('Failed to load rooms');
+            Utils.showNotification('Failed to load rooms', 'error');
+        } finally {
+            this.isLoading = false;
         }
     }
 

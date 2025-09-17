@@ -125,9 +125,9 @@ func (h *InviteHandlers) InviteMultipleUsers(c *gin.Context) {
 	}
 
 	response := map[string]interface{}{
-		"success_count": successCount,
+		"success_count":  successCount,
 		"failed_invites": failedInvites,
-		"total_invited": len(req.Usernames),
+		"total_invited":  len(req.Usernames),
 	}
 
 	SuccessResponse(c, response, "Bulk invite completed")
@@ -182,7 +182,7 @@ func (h *InviteHandlers) GetInvitableUsers(c *gin.Context) {
 	for _, user := range users {
 		if !memberMap[user.ID] {
 			invitableUsers = append(invitableUsers, map[string]interface{}{
-				"id": user.ID,
+				"id":       user.ID,
 				"username": user.Username,
 			})
 		}
