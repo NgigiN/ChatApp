@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"chat_app/internal/config"
+	"chat_app/internal/handlers"
 	"chat_app/pkg/logger"
-    "chat_app/internal/ws"
 
 	"github.com/gin-gonic/gin"
 )
@@ -33,12 +33,8 @@ func main() {
 	router := gin.New()
 	router.Use(gin.Recovery())
 
-    // WebSocket hub
-    hub := ws.NewHub()
-    go hub.Run()
-
-    // Routes
-    router.GET("/ws", ws.ServeWS(hub))
+	// Setup routes
+	handlers.SetupRoutes(router, db, nil, logger)
 
 	// Start server
 	server := &http.Server{
