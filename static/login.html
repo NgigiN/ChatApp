@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -214,7 +215,9 @@
     }
 
     @keyframes spin {
-      to { transform: rotate(360deg); }
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     .forgot-password {
@@ -242,6 +245,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="login-container">
     <div class="logo-container">
@@ -256,15 +260,8 @@
         <label for="username" class="form-label">Username</label>
         <div class="input-group">
           <i class="fas fa-user input-icon"></i>
-          <input 
-            type="text" 
-            id="username" 
-            name="username" 
-            class="form-control" 
-            placeholder="Enter your username"
-            required
-            autocomplete="username"
-          >
+          <input type="text" id="username" name="username" class="form-control" placeholder="Enter your username"
+            required autocomplete="username">
         </div>
       </div>
 
@@ -272,15 +269,8 @@
         <label for="password" class="form-label">Password</label>
         <div class="input-group">
           <i class="fas fa-lock input-icon"></i>
-          <input 
-            type="password" 
-            id="password" 
-            name="password" 
-            class="form-control" 
-            placeholder="Enter your password"
-            required
-            autocomplete="current-password"
-          >
+          <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password"
+            required autocomplete="current-password">
         </div>
       </div>
 
@@ -333,7 +323,7 @@
       // Login form submission
       loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         // Validate form
         const validation = Utils.validateForm(loginForm, validationRules);
         if (!validation.isValid) {
@@ -347,7 +337,7 @@
         loginLoading.style.display = 'inline-block';
 
         const formData = Utils.serializeForm(loginForm);
-        
+
         try {
           const response = await Utils.apiRequest('/login', {
             method: 'POST',
@@ -363,7 +353,7 @@
             });
 
             Utils.showNotification('Login successful! Welcome back.', 'success');
-            
+
             // Redirect to main page
             setTimeout(() => {
               window.location.href = '/static/index.html';
@@ -454,7 +444,7 @@
         messageEl.textContent = text;
         messageEl.className = type === 'error' ? 'error-message' : 'success-message';
         messageEl.style.display = 'block';
-        
+
         // Auto-hide after 5 seconds
         setTimeout(() => {
           messageEl.style.display = 'none';
@@ -475,4 +465,5 @@
     });
   </script>
 </body>
+
 </html>

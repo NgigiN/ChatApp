@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -141,20 +142,46 @@
       border-radius: 2px;
     }
 
-    .strength-weak { background: #f56565; width: 25%; }
-    .strength-fair { background: #ed8936; width: 50%; }
-    .strength-good { background: #38a169; width: 75%; }
-    .strength-strong { background: #48bb78; width: 100%; }
+    .strength-weak {
+      background: #f56565;
+      width: 25%;
+    }
+
+    .strength-fair {
+      background: #ed8936;
+      width: 50%;
+    }
+
+    .strength-good {
+      background: #38a169;
+      width: 75%;
+    }
+
+    .strength-strong {
+      background: #48bb78;
+      width: 100%;
+    }
 
     .strength-text {
       margin-top: 0.25rem;
       font-weight: 500;
     }
 
-    .strength-weak .strength-text { color: #f56565; }
-    .strength-fair .strength-text { color: #ed8936; }
-    .strength-good .strength-text { color: #38a169; }
-    .strength-strong .strength-text { color: #48bb78; }
+    .strength-weak .strength-text {
+      color: #f56565;
+    }
+
+    .strength-fair .strength-text {
+      color: #ed8936;
+    }
+
+    .strength-good .strength-text {
+      color: #38a169;
+    }
+
+    .strength-strong .strength-text {
+      color: #48bb78;
+    }
 
     .btn-register {
       width: 100%;
@@ -254,7 +281,9 @@
     }
 
     @keyframes spin {
-      to { transform: rotate(360deg); }
+      to {
+        transform: rotate(360deg);
+      }
     }
 
     .terms {
@@ -287,6 +316,7 @@
     }
   </style>
 </head>
+
 <body>
   <div class="register-container">
     <div class="logo-container">
@@ -302,15 +332,8 @@
           <label for="firstname" class="form-label">First Name</label>
           <div class="input-group">
             <i class="fas fa-user input-icon"></i>
-            <input 
-              type="text" 
-              id="firstname" 
-              name="firstname" 
-              class="form-control" 
-              placeholder="Enter first name"
-              required
-              autocomplete="given-name"
-            >
+            <input type="text" id="firstname" name="firstname" class="form-control" placeholder="Enter first name"
+              required autocomplete="given-name">
           </div>
         </div>
 
@@ -318,15 +341,8 @@
           <label for="lastname" class="form-label">Last Name</label>
           <div class="input-group">
             <i class="fas fa-user input-icon"></i>
-            <input 
-              type="text" 
-              id="lastname" 
-              name="lastname" 
-              class="form-control" 
-              placeholder="Enter last name"
-              required
-              autocomplete="family-name"
-            >
+            <input type="text" id="lastname" name="lastname" class="form-control" placeholder="Enter last name" required
+              autocomplete="family-name">
           </div>
         </div>
       </div>
@@ -335,15 +351,8 @@
         <label for="username" class="form-label">Username</label>
         <div class="input-group">
           <i class="fas fa-at input-icon"></i>
-          <input 
-            type="text" 
-            id="username" 
-            name="username" 
-            class="form-control" 
-            placeholder="Choose a username"
-            required
-            autocomplete="username"
-          >
+          <input type="text" id="username" name="username" class="form-control" placeholder="Choose a username" required
+            autocomplete="username">
         </div>
       </div>
 
@@ -351,15 +360,8 @@
         <label for="email" class="form-label">Email Address</label>
         <div class="input-group">
           <i class="fas fa-envelope input-icon"></i>
-          <input 
-            type="email" 
-            id="email" 
-            name="email" 
-            class="form-control" 
-            placeholder="Enter your email"
-            required
-            autocomplete="email"
-          >
+          <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email" required
+            autocomplete="email">
         </div>
       </div>
 
@@ -367,15 +369,8 @@
         <label for="password" class="form-label">Password</label>
         <div class="input-group">
           <i class="fas fa-lock input-icon"></i>
-          <input 
-            type="password" 
-            id="password" 
-            name="password" 
-            class="form-control" 
-            placeholder="Create a password"
-            required
-            autocomplete="new-password"
-          >
+          <input type="password" id="password" name="password" class="form-control" placeholder="Create a password"
+            required autocomplete="new-password">
         </div>
         <div class="password-strength" id="password-strength" style="display: none;">
           <div class="strength-bar">
@@ -389,15 +384,8 @@
         <label for="confirm-password" class="form-label">Confirm Password</label>
         <div class="input-group">
           <i class="fas fa-lock input-icon"></i>
-          <input 
-            type="password" 
-            id="confirm-password" 
-            name="confirm-password" 
-            class="form-control" 
-            placeholder="Confirm your password"
-            required
-            autocomplete="new-password"
-          >
+          <input type="password" id="confirm-password" name="confirm-password" class="form-control"
+            placeholder="Confirm your password" required autocomplete="new-password">
         </div>
       </div>
 
@@ -416,8 +404,8 @@
       </button>
 
       <div class="terms">
-        By creating an account, you agree to our 
-        <a href="#" id="terms-link">Terms of Service</a> and 
+        By creating an account, you agree to our
+        <a href="#" id="terms-link">Terms of Service</a> and
         <a href="#" id="privacy-link">Privacy Policy</a>
       </div>
 
@@ -483,7 +471,7 @@
       confirmPasswordInput.addEventListener('input', () => {
         const password = passwordInput.value;
         const confirmPassword = confirmPasswordInput.value;
-        
+
         if (confirmPassword && password !== confirmPassword) {
           confirmPasswordInput.classList.add('error');
           showFieldError(confirmPasswordInput, 'Passwords do not match');
@@ -496,7 +484,7 @@
       // Register form submission
       registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         // Validate form
         const validation = Utils.validateForm(registerForm, validationRules);
         if (!validation.isValid) {
@@ -530,7 +518,7 @@
 
           if (response.success) {
             showMessage('Account created successfully! Redirecting to login...', 'success');
-            
+
             // Redirect to login page after 2 seconds
             setTimeout(() => {
               window.location.href = '/static/login.html';
@@ -613,10 +601,10 @@
 
         passwordStrength.style.display = 'block';
         passwordStrength.className = `password-strength strength-${strength.level}`;
-        
+
         const fill = passwordStrength.querySelector('.strength-fill');
         const text = passwordStrength.querySelector('.strength-text');
-        
+
         fill.className = `strength-fill strength-${strength.level}`;
         text.textContent = `Password strength: ${strength.level}`;
       }
@@ -663,7 +651,7 @@
         messageEl.textContent = text;
         messageEl.className = type === 'error' ? 'error-message' : 'success-message';
         messageEl.style.display = 'block';
-        
+
         // Auto-hide after 5 seconds
         setTimeout(() => {
           messageEl.style.display = 'none';
@@ -684,4 +672,5 @@
     });
   </script>
 </body>
+
 </html>

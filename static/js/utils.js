@@ -127,7 +127,7 @@ class Utils {
     if (typeof element === 'string') {
       element = this.$(element);
     }
-    
+
     if (element) {
       element.disabled = true;
       element.dataset.originalText = element.textContent;
@@ -139,7 +139,7 @@ class Utils {
     if (typeof element === 'string') {
       element = this.$(element);
     }
-    
+
     if (element) {
       element.disabled = false;
       element.textContent = element.dataset.originalText || 'Submit';
@@ -163,7 +163,7 @@ class Utils {
 
     for (const [field, rule] of Object.entries(rules)) {
       const value = formData[field];
-      
+
       if (rule.required && (!value || value.trim() === '')) {
         errors[field] = `${field} is required`;
         continue;
@@ -223,7 +223,7 @@ class Utils {
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     if (days < 7) return `${days}d ago`;
-    
+
     return date.toLocaleDateString();
   }
 
@@ -276,7 +276,7 @@ class Utils {
 
   static throttle(func, limit) {
     let inThrottle;
-    return function(...args) {
+    return function (...args) {
       if (!inThrottle) {
         func.apply(this, args);
         inThrottle = true;
@@ -312,13 +312,13 @@ class Utils {
     if (element) {
       element.style.opacity = '0';
       element.style.display = 'block';
-      
+
       let start = performance.now();
       const animate = (timestamp) => {
         const elapsed = timestamp - start;
         const progress = Math.min(elapsed / duration, 1);
         element.style.opacity = progress;
-        
+
         if (progress < 1) {
           requestAnimationFrame(animate);
         }
@@ -337,7 +337,7 @@ class Utils {
         const elapsed = timestamp - start;
         const progress = Math.min(elapsed / duration, 1);
         element.style.opacity = 1 - progress;
-        
+
         if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
@@ -370,12 +370,12 @@ class Utils {
   // WebSocket Utilities
   static createWebSocket(url, options = {}) {
     const ws = new WebSocket(url);
-    
+
     ws.onopen = options.onOpen || (() => console.log('WebSocket connected'));
     ws.onclose = options.onClose || (() => console.log('WebSocket disconnected'));
     ws.onerror = options.onError || ((error) => console.error('WebSocket error:', error));
     ws.onmessage = options.onMessage || ((event) => console.log('WebSocket message:', event.data));
-    
+
     return ws;
   }
 
@@ -427,12 +427,12 @@ class Utils {
       '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1',
       '#8b5cf6', '#a855f7', '#d946ef', '#ec4899'
     ];
-    
+
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
       hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
-    
+
     return colors[Math.abs(hash) % colors.length];
   }
 
@@ -444,6 +444,23 @@ class Utils {
       .toUpperCase()
       .substring(0, 2);
   }
+
+  // Modal utilities
+  static showModal(modalId) {
+    const modal = this.$(modalId);
+    if (modal) {
+      modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  static hideModal(modalId) {
+    const modal = this.$(modalId);
+    if (modal) {
+      modal.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+  }
 }
 
 // Add CSS animations
@@ -453,17 +470,17 @@ style.textContent = `
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
   }
-  
+
   @keyframes slideOutRight {
     from { transform: translateX(0); opacity: 1; }
     to { transform: translateX(100%); opacity: 0; }
   }
-  
+
   .form-control.error {
     border-color: #ef4444;
     box-shadow: 0 0 0 3px rgb(239 68 68 / 0.1);
   }
-  
+
   .notification {
     box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   }

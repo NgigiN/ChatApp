@@ -10,7 +10,7 @@ class ChatApp {
     this.messageHistory = [];
     this.isTyping = false;
     this.typingUsers = new Set();
-    
+
     this.initializeElements();
     this.loadUserData();
     this.initializeEventListeners();
@@ -33,7 +33,7 @@ class ChatApp {
       username: 'Anonymous',
       id: Date.now()
     });
-    
+
     // Update UI with user info
     const userDisplay = Utils.$('#user-display');
     if (userDisplay) {
@@ -102,7 +102,7 @@ class ChatApp {
         e.preventDefault();
         this.messageInput.focus();
       }
-      
+
       // Escape to clear message input
       if (e.key === 'Escape') {
         this.messageInput.value = '';
@@ -118,7 +118,7 @@ class ChatApp {
 
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsUrl = `${protocol}//${window.location.host}/ws`;
-    
+
     this.ws = new WebSocket(wsUrl);
     this.updateConnectionStatus('connecting');
 
@@ -126,7 +126,7 @@ class ChatApp {
       this.reconnectAttempts = 0;
       this.updateConnectionStatus('connected');
       Utils.showNotification('Connected to server', 'success');
-      
+
       if (this.currentRoom) {
         this.joinRoom(this.currentRoom);
       }
@@ -146,7 +146,7 @@ class ChatApp {
       this.updateConnectionStatus('disconnected');
       this.messageInput.disabled = true;
       Utils.$('#send-btn').disabled = true;
-      
+
       if (event.code !== 1000) { // Not a normal closure
         this.handleReconnection();
       }
@@ -163,9 +163,9 @@ class ChatApp {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       const delay = Math.min(this.reconnectDelay * Math.pow(2, this.reconnectAttempts), 30000);
       this.reconnectAttempts++;
-      
-      Utils.showNotification(`Reconnecting in ${delay/1000}s... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`, 'warning');
-      
+
+      Utils.showNotification(`Reconnecting in ${delay / 1000}s... (${this.reconnectAttempts}/${this.maxReconnectAttempts})`, 'warning');
+
       setTimeout(() => {
         this.connectWebSocket();
       }, delay);
@@ -176,7 +176,7 @@ class ChatApp {
 
   updateConnectionStatus(status) {
     if (!this.connectionStatus) return;
-    
+
     const statusMap = {
       connecting: { text: 'Connecting...', class: 'status-connecting' },
       connected: { text: 'Connected', class: 'status-online' },
@@ -185,7 +185,7 @@ class ChatApp {
       online: { text: 'Online', class: 'status-online' },
       offline: { text: 'Offline', class: 'status-offline' }
     };
-    
+
     const statusInfo = statusMap[status] || statusMap.disconnected;
     this.connectionStatus.textContent = statusInfo.text;
     this.connectionStatus.className = `status-indicator ${statusInfo.class}`;
@@ -193,22 +193,22 @@ class ChatApp {
 
   selectRoom(roomName) {
     if (this.currentRoom === roomName) return;
-    
+
     // Update UI
     document.querySelectorAll('.room-btn').forEach(btn => {
       btn.classList.remove('active');
     });
-    
+
     const selectedBtn = document.querySelector(`[data-room="${roomName}"]`);
     if (selectedBtn) {
       selectedBtn.classList.add('active');
     }
-    
+
     this.currentRoom = roomName;
     this.currentRoomTitle.textContent = `Room: ${roomName}`;
     this.messageInput.disabled = false;
     this.messageInput.focus();
-    
+
     // Clear messages and join room
     this.messagesContainer.innerHTML = '';
     this.joinRoom(roomName);
@@ -220,12 +220,12 @@ class ChatApp {
       Utils.showNotification('Please enter a room name', 'warning');
       return;
     }
-    
+
     if (roomName.length < 3) {
       Utils.showNotification('Room name must be at least 3 characters', 'warning');
       return;
     }
-    
+
     // Create room button if it doesn't exist
     let roomBtn = document.querySelector(`[data-room="${roomName}"]`);
     if (!roomBtn) {
@@ -233,7 +233,7 @@ class ChatApp {
       roomBtn.dataset.room = roomName;
       this.roomsContainer.appendChild(roomBtn);
     }
-    
+
     this.selectRoom(roomName);
     Utils.$('#new-room-name').value = '';
   }
@@ -245,10 +245,10 @@ class ChatApp {
         room: roomName,
         user: this.user
       };
-      
+
       this.ws.send(JSON.stringify(joinMessage));
       console.log(`Joining room: ${roomName}`);
-      
+
       // Request message history
       this.requestMessageHistory(roomName);
     } else {
@@ -268,7 +268,7 @@ class ChatApp {
         type: 'system'
       }
     ];
-    
+
     this.messageHistory = mockHistory;
     this.renderMessages(mockHistory);
   }
@@ -278,7 +278,7 @@ class ChatApp {
     if (!content || !this.currentRoom || this.ws.readyState !== WebSocket.OPEN) {
       return;
     }
-    
+
     const message = {
       type: 'message',
       room: this.currentRoom,
@@ -286,7 +286,7 @@ class ChatApp {
       sender: this.user.username,
       timestamp: new Date()
     };
-    
+
     try {
       this.ws.send(JSON.stringify(message));
       this.messageInput.value = '';
@@ -300,19 +300,19 @@ class ChatApp {
 
   handleMessage(message) {
     console.log('Received message:', message);
-    
+
     if (Array.isArray(message)) {
       // Message history
       this.messageHistory = message;
       this.renderMessages(message);
       return;
     }
-    
+
     if (message.type === 'typing') {
       this.handleTypingMessage(message);
       return;
     }
-    
+
     if (message.room === this.currentRoom) {
       this.messageHistory.push(message);
       this.renderMessage(message);
@@ -327,7 +327,7 @@ class ChatApp {
 
   renderMessage(message) {
     const messageElement = Utils.createElement('div', 'message');
-    
+
     if (message.type === 'system') {
       messageElement.classList.add('system');
       messageElement.innerHTML = `
@@ -339,7 +339,7 @@ class ChatApp {
       const isOwnMessage = message.sender === this.user.username;
       const avatarColor = Utils.generateAvatarColor(message.sender);
       const initials = Utils.getInitials(message.sender);
-      
+
       messageElement.innerHTML = `
         <div class="message-avatar" style="background-color: ${avatarColor}">
           ${initials}
@@ -352,12 +352,12 @@ class ChatApp {
           <div class="message-text">${this.formatMessageContent(message.content)}</div>
         </div>
       `;
-      
+
       if (isOwnMessage) {
         messageElement.classList.add('own-message');
       }
     }
-    
+
     this.messagesContainer.appendChild(messageElement);
     this.scrollToBottom();
   }
@@ -366,10 +366,10 @@ class ChatApp {
     // Convert URLs to links
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     content = content.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
-    
+
     // Convert newlines to <br>
     content = content.replace(/\n/g, '<br>');
-    
+
     return content;
   }
 
@@ -384,7 +384,7 @@ class ChatApp {
       this.isTyping = true;
       this.sendTypingStatus(true);
     }
-    
+
     // Reset typing status after 3 seconds of inactivity
     clearTimeout(this.typingTimeout);
     this.typingTimeout = setTimeout(() => {
@@ -407,32 +407,32 @@ class ChatApp {
         user: this.user.username,
         isTyping: isTyping
       };
-      
+
       this.ws.send(JSON.stringify(message));
     }
   }
 
   handleTypingMessage(message) {
     if (message.user === this.user.username) return;
-    
+
     if (message.isTyping) {
       this.typingUsers.add(message.user);
     } else {
       this.typingUsers.delete(message.user);
     }
-    
+
     this.updateTypingIndicator();
   }
 
   updateTypingIndicator() {
     if (!this.typingIndicator) return;
-    
+
     if (this.typingUsers.size === 0) {
       this.typingIndicator.style.display = 'none';
     } else {
       const users = Array.from(this.typingUsers);
       let text = '';
-      
+
       if (users.length === 1) {
         text = `${users[0]} is typing...`;
       } else if (users.length === 2) {
@@ -440,7 +440,7 @@ class ChatApp {
       } else {
         text = `${users[0]} and ${users.length - 1} others are typing...`;
       }
-      
+
       this.typingIndicator.textContent = text;
       this.typingIndicator.style.display = 'block';
     }

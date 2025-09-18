@@ -54,14 +54,14 @@ class RoomManager {
 
     async loadRooms() {
         if (this.isLoading) return;
-        
+
         try {
             this.isLoading = true;
             this.showLoading();
-            
+
             // Try to fetch from API first
             const response = await Utils.apiRequest('/api/v1/rooms');
-            
+
             if (response.success) {
                 this.rooms = response.data;
             } else {
@@ -143,19 +143,19 @@ class RoomManager {
                         </div>
                     </div>
                     <div class="flex items-center space-x-2">
-                        <button onclick="roomManager.joinRoom(${room.id})" 
+                        <button onclick="roomManager.joinRoom(${room.id})"
                                 class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
                             <i class="fas fa-sign-in-alt mr-1"></i>
                             Join
                         </button>
                         ${room.is_creator ? `
-                            <button onclick="roomManager.manageRoom(${room.id})" 
+                            <button onclick="roomManager.manageRoom(${room.id})"
                                     class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm">
                                 <i class="fas fa-cog mr-1"></i>
                                 Manage
                             </button>
                         ` : `
-                            <button onclick="roomManager.leaveRoom(${room.id})" 
+                            <button onclick="roomManager.leaveRoom(${room.id})"
                                     class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm">
                                 <i class="fas fa-sign-out-alt mr-1"></i>
                                 Leave
@@ -197,7 +197,7 @@ class RoomManager {
         try {
             // In real app, POST to /api/v1/rooms
             console.log('Creating room:', roomData);
-            
+
             // Mock success
             this.showSuccess('Room created successfully!');
             this.hideCreateRoomModal();
