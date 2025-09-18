@@ -845,14 +845,6 @@
         // Clear input immediately
         input.value = '';
 
-        // Add message to chat immediately for better UX
-        this.addMessage({
-          sender: 'You',
-          content: message,
-          timestamp: new Date(),
-          isOwn: true
-        });
-
         try {
           // Save message to database
           await Utils.apiRequest(`/api/rooms/${this.currentRoom.id}/messages`, {
@@ -861,6 +853,14 @@
               sender: 'You',
               content: message
             })
+          });
+          
+          // Add message to chat after successful save
+          this.addMessage({
+            sender: 'You',
+            content: message,
+            timestamp: new Date(),
+            isOwn: true
           });
         } catch (error) {
           console.error('Error saving message:', error);
@@ -969,12 +969,15 @@
 
       handleWebSocketMessage(message) {
         if (message.type === 'message' && this.currentRoom && message.room === this.currentRoom.name) {
-          this.addMessage({
-            sender: message.sender || 'Anonymous',
-            content: message.content,
-            timestamp: new Date(),
-            isOwn: false
-          });
+          // Only add messages from other users, not our own
+          if (message.sender !== 'You') {
+            this.addMessage({
+              sender: message.sender || 'Anonymous',
+              content: message.content,
+              timestamp: new Date(),
+              isOwn: false
+            });
+          }
         }
       }
     }
