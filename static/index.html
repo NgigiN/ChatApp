@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -244,6 +245,128 @@
       color: #374151;
     }
 
+    /* Chat Message Styles */
+    .message-wrapper {
+      display: flex;
+      margin-bottom: 1rem;
+      animation: fadeInUp 0.3s ease;
+    }
+
+    .message-wrapper.own-message {
+      justify-content: flex-end;
+    }
+
+    .message-wrapper.other-message {
+      justify-content: flex-start;
+    }
+
+    .message-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 600;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    .message-bubble {
+      max-width: 70%;
+      padding: 12px 16px;
+      border-radius: 18px;
+      position: relative;
+      word-wrap: break-word;
+    }
+
+    .message-bubble.own {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message-bubble.other {
+      background: #f1f3f4;
+      color: #1f2937;
+      border-bottom-left-radius: 4px;
+    }
+
+    .message-sender {
+      font-size: 12px;
+      font-weight: 600;
+      color: #667eea;
+      margin-bottom: 4px;
+    }
+
+    .message-content {
+      font-size: 14px;
+      line-height: 1.4;
+      margin-bottom: 4px;
+    }
+
+    .message-time {
+      font-size: 11px;
+      opacity: 0.7;
+      text-align: right;
+    }
+
+    .message-bubble.other .message-time {
+      text-align: left;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Chat input improvements */
+    #message-input {
+      border: 2px solid #e5e7eb;
+      border-radius: 20px;
+      padding: 12px 16px;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+
+    #message-input:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      outline: none;
+    }
+
+    #chat-form button {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    #chat-form button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    #chat-form button:active {
+      transform: scale(0.95);
+    }
+
     @media (max-width: 768px) {
       .rooms-grid {
         grid-template-columns: 1fr;
@@ -257,9 +380,14 @@
       .welcome-subtitle {
         font-size: 1rem;
       }
+
+      .message-bubble {
+        max-width: 85%;
+      }
     }
   </style>
 </head>
+
 <body>
   <!-- Navigation -->
   <nav class="navbar">
@@ -286,7 +414,8 @@
   <div class="landing-container">
     <div class="welcome-header">
       <h1 class="welcome-title">Welcome to School Chat</h1>
-      <p class="welcome-subtitle">Connect with your classmates, join study groups, and collaborate on learning together</p>
+      <p class="welcome-subtitle">Connect with your classmates, join study groups, and collaborate on learning together
+      </p>
     </div>
 
     <div class="rooms-grid" id="rooms-grid">
@@ -306,11 +435,13 @@
       <form id="create-room-form">
         <div class="form-group">
           <label for="room-name" class="form-label">Room Name</label>
-          <input type="text" id="room-name" name="room-name" class="form-control" placeholder="Enter room name" required>
+          <input type="text" id="room-name" name="room-name" class="form-control" placeholder="Enter room name"
+            required>
         </div>
         <div class="form-group">
           <label for="room-description" class="form-label">Description</label>
-          <textarea id="room-description" name="room-description" class="form-control" placeholder="Enter room description" rows="3"></textarea>
+          <textarea id="room-description" name="room-description" class="form-control"
+            placeholder="Enter room description" rows="3"></textarea>
         </div>
         <div class="form-group">
           <label class="form-label">
@@ -328,7 +459,8 @@
 
   <!-- Chat Modal -->
   <div id="chat-modal" class="modal">
-    <div class="modal-content" style="max-width: 800px; width: 95%; height: 80vh; display: flex; flex-direction: column;">
+    <div class="modal-content"
+      style="max-width: 800px; width: 95%; height: 80vh; display: flex; flex-direction: column;">
       <div class="modal-header">
         <div>
           <h2 class="modal-title" id="chat-room-title">Room Chat</h2>
@@ -338,10 +470,11 @@
           <i class="fas fa-times"></i>
         </button>
       </div>
-      
+
       <div class="flex-1" style="display: flex; flex-direction: column; min-height: 0;">
         <!-- Messages Area -->
-        <div id="chat-messages" style="flex: 1; overflow-y: auto; padding: 1rem; background: #f8fafc; border-radius: 12px; margin-bottom: 1rem; min-height: 300px;">
+        <div id="chat-messages"
+          style="flex: 1; overflow-y: auto; padding: 1rem; background: #f8fafc; border-radius: 12px; margin-bottom: 1rem; min-height: 300px;">
           <div class="text-center text-gray-500 py-8">
             <i class="fas fa-comments text-4xl mb-4"></i>
             <h3 class="text-lg font-medium mb-2">Start the conversation!</h3>
@@ -357,13 +490,8 @@
 
         <!-- Message Input -->
         <form id="chat-form" class="flex gap-3">
-          <input 
-            type="text" 
-            id="message-input" 
-            class="form-control" 
-            placeholder="Type your message... (Press Enter to send)"
-            style="flex: 1;"
-          >
+          <input type="text" id="message-input" class="form-control"
+            placeholder="Type your message... (Press Enter to send)" style="flex: 1;">
           <button type="submit" class="btn btn-primary">
             <i class="fas fa-paper-plane"></i>
           </button>
@@ -451,7 +579,7 @@
       createRoomCard(room = null) {
         const card = document.createElement('div');
         card.className = 'room-card';
-        
+
         if (room) {
           card.innerHTML = `
             <div class="room-icon" style="background: ${room.color}">
@@ -492,6 +620,26 @@
         document.getElementById('chat-room-description').textContent = room.description;
         Utils.showModal('#chat-modal');
         
+        // Clear previous messages and add welcome message
+        const messagesContainer = document.getElementById('chat-messages');
+        messagesContainer.innerHTML = `
+          <div class="text-center text-gray-500 py-8">
+            <i class="fas fa-comments text-4xl mb-4"></i>
+            <h3 class="text-lg font-medium mb-2">Welcome to ${room.name}!</h3>
+            <p>Start the conversation by sending a message.</p>
+          </div>
+        `;
+        
+        // Add some sample messages for demo
+        setTimeout(() => {
+          this.addMessage({
+            sender: 'System',
+            content: `Welcome to ${room.name}! This is a ${room.is_private ? 'private' : 'public'} room.`,
+            timestamp: new Date(Date.now() - 300000), // 5 minutes ago
+            isOwn: false
+          });
+        }, 500);
+        
         // Join room via WebSocket
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
           this.ws.send(JSON.stringify({
@@ -529,6 +677,14 @@
         document.getElementById('chat-form').addEventListener('submit', (e) => {
           e.preventDefault();
           this.sendMessage();
+        });
+
+        // Enter key support for message input
+        document.getElementById('message-input').addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            this.sendMessage();
+          }
         });
 
         // Logout
@@ -591,6 +747,9 @@
 
         if (!message || !this.currentRoom) return;
 
+        // Clear input immediately
+        input.value = '';
+
         // Add message to chat
         this.addMessage({
           sender: 'You',
@@ -607,8 +766,6 @@
             content: message
           }));
         }
-
-        input.value = '';
       }
 
       addMessage(message) {
@@ -621,30 +778,54 @@
         }
 
         const messageElement = document.createElement('div');
-        messageElement.className = 'message mb-4';
-        messageElement.innerHTML = `
-          <div class="flex items-start gap-3">
-            <div class="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-semibold">
-              ${message.sender.charAt(0).toUpperCase()}
+        messageElement.className = `message-wrapper ${message.isOwn ? 'own-message' : 'other-message'}`;
+        
+        if (message.isOwn) {
+          // Own message - right aligned, blue bubble
+          messageElement.innerHTML = `
+            <div class="message-bubble own">
+              <div class="message-content">${Utils.escapeHtml(message.content)}</div>
+              <div class="message-time">${this.formatMessageTime(message.timestamp)}</div>
             </div>
-            <div class="flex-1">
-              <div class="flex items-center gap-2 mb-1">
-                <span class="font-semibold text-sm text-gray-900">${message.sender}</span>
-                <span class="text-xs text-gray-500">${Utils.formatTime(message.timestamp)}</span>
-              </div>
-              <div class="text-gray-800">${Utils.escapeHtml(message.content)}</div>
+          `;
+        } else {
+          // Other message - left aligned, grey bubble with avatar
+          messageElement.innerHTML = `
+            <div class="message-avatar">
+              ${Utils.getInitials(message.sender)}
             </div>
-          </div>
-        `;
+            <div class="message-bubble other">
+              <div class="message-sender">${message.sender}</div>
+              <div class="message-content">${Utils.escapeHtml(message.content)}</div>
+              <div class="message-time">${this.formatMessageTime(message.timestamp)}</div>
+            </div>
+          `;
+        }
 
         messagesContainer.appendChild(messageElement);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
       }
 
+      formatMessageTime(timestamp) {
+        const now = new Date();
+        const messageTime = new Date(timestamp);
+        const diffInMinutes = Math.floor((now - messageTime) / (1000 * 60));
+        
+        if (diffInMinutes < 1) {
+          return 'now';
+        } else if (diffInMinutes < 60) {
+          return `${diffInMinutes}m ago`;
+        } else if (diffInMinutes < 1440) { // Less than 24 hours
+          return messageTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } else {
+          return messageTime.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        }
+      }
+
       connectWebSocket() {
         const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
         const wsUrl = `${protocol}//${window.location.host}/ws`;
-        
+
         this.ws = new WebSocket(wsUrl);
 
         this.ws.onopen = () => {
@@ -687,4 +868,5 @@
     });
   </script>
 </body>
+
 </html>
