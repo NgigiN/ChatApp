@@ -201,13 +201,21 @@ func createRoomHandler(db *sql.DB) gin.HandlerFunc {
 func getMessagesHandler(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		roomID := c.Param("id")
-
+		
+		// Get room name from room ID
+		var roomName string
+		err := db.QueryRow("SELECT name FROM rooms WHERE id = ?", roomID).Scan(&roomName)
+		if err != nil {
+			c.JSON(404, gin.H{"error": "Room not found"})
+			return
+		}
+		
 		rows, err := db.Query(`
-			SELECT sender, content, created_at
-			FROM messages
-			WHERE room_id = ?
-			ORDER BY created_at ASC
-		`, roomID)
+			SELECT sender, content, timestamp 
+			FROM messages 
+			WHERE room = ? 
+			ORDER BY timestamp ASC
+		`, roomName)
 		if err != nil {
 			c.JSON(500, gin.H{"error": "Failed to fetch messages"})
 			return
@@ -216,8 +224,8 @@ func getMessagesHandler(db *sql.DB) gin.HandlerFunc {
 
 		var messages []map[string]interface{}
 		for rows.Next() {
-			var sender, content, createdAt string
-			err := rows.Scan(&sender, &content, &createdAt)
+			var sender, content, timestamp string
+			err := rows.Scan(&sender, &content, &timestamp)
 			if err != nil {
 				log.Printf("Error scanning message: %v", err)
 				continue
@@ -226,7 +234,7 @@ func getMessagesHandler(db *sql.DB) gin.HandlerFunc {
 			messages = append(messages, map[string]interface{}{
 				"sender":     sender,
 				"content":    content,
-				"created_at": createdAt,
+				"created_at": timestamp,
 			})
 		}
 
@@ -237,7 +245,15 @@ func getMessagesHandler(db *sql.DB) gin.HandlerFunc {
 func createMessageHandler(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		roomID := c.Param("id")
-
+		
+		// Get room name from room ID
+		var roomName string
+		err := db.QueryRow("SELECT name FROM rooms WHERE id = ?", roomID).Scan(&roomName)
+		if err != nil {
+			c.JSON(404, gin.H{"error": "Room not found"})
+			return
+		}
+		
 		var message struct {
 			Sender  string `json:"sender" binding:"required"`
 			Content string `json:"content" binding:"required"`
@@ -248,10 +264,10 @@ func createMessageHandler(db *sql.DB) gin.HandlerFunc {
 			return
 		}
 
-		_, err := db.Exec(`
-			INSERT INTO messages (room_id, sender, content)
-			VALUES (?, ?, ?)
-		`, roomID, message.Sender, message.Content)
+		_, err = db.Exec(`
+			INSERT INTO messages (room, sender, content, timestamp) 
+			VALUES (?, ?, ?, NOW())
+		`, roomName, message.Sender, message.Content)
 		if err != nil {
 			c.JSON(500, gin.H{"error": "Failed to save message"})
 			return
