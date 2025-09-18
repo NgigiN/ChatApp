@@ -831,10 +831,7 @@
         const input = document.getElementById('message-input');
         const message = input.value.trim();
 
-        console.log('sendMessage called:', { message, currentRoom: this.currentRoom }); // Debug log
-
         if (!message || !this.currentRoom) {
-          console.log('Message or room missing'); // Debug log
           return;
         }
 
@@ -842,7 +839,6 @@
         input.value = '';
 
         // Add message to chat immediately for better UX
-        console.log('Adding message to chat...'); // Debug log
         this.addMessage({
           sender: 'You',
           content: message,
@@ -852,7 +848,6 @@
 
         try {
           // Save message to database
-          console.log('Saving message to database...'); // Debug log
           await Utils.apiRequest(`/api/rooms/${this.currentRoom.id}/messages`, {
             method: 'POST',
             body: JSON.stringify({
@@ -860,7 +855,6 @@
               content: message
             })
           });
-          console.log('Message saved to database'); // Debug log
         } catch (error) {
           console.error('Error saving message:', error);
           Utils.showNotification('Failed to save message', 'error');
@@ -877,9 +871,8 @@
       }
 
       addMessage(message) {
-        console.log('Adding message:', message); // Debug log
         const messagesContainer = document.getElementById('chat-messages');
-
+        
         // Remove welcome message if it exists
         const welcomeMsg = messagesContainer.querySelector('.text-center');
         if (welcomeMsg) {
@@ -888,7 +881,7 @@
 
         const messageElement = document.createElement('div');
         messageElement.className = `message-wrapper ${message.isOwn ? 'own-message' : 'other-message'}`;
-
+        
         if (message.isOwn) {
           // Own message - right aligned, blue bubble
           messageElement.innerHTML = `
@@ -913,7 +906,6 @@
 
         messagesContainer.appendChild(messageElement);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        console.log('Message added to DOM'); // Debug log
       }
 
       formatMessageTime(timestamp) {
