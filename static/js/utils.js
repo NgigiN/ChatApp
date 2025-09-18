@@ -445,6 +445,12 @@ class Utils {
       .substring(0, 2);
   }
 
+  static escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
   // Modal utilities
   static showModal(modalId) {
     const modal = this.$(modalId);

@@ -201,7 +201,7 @@ func createRoomHandler(db *sql.DB) gin.HandlerFunc {
 func getMessagesHandler(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		roomID := c.Param("id")
-		
+
 		// Get room name from room ID
 		var roomName string
 		err := db.QueryRow("SELECT name FROM rooms WHERE id = ?", roomID).Scan(&roomName)
@@ -209,11 +209,11 @@ func getMessagesHandler(db *sql.DB) gin.HandlerFunc {
 			c.JSON(404, gin.H{"error": "Room not found"})
 			return
 		}
-		
+
 		rows, err := db.Query(`
-			SELECT sender, content, timestamp 
-			FROM messages 
-			WHERE room = ? 
+			SELECT sender, content, timestamp
+			FROM messages
+			WHERE room = ?
 			ORDER BY timestamp ASC
 		`, roomName)
 		if err != nil {
@@ -245,7 +245,7 @@ func getMessagesHandler(db *sql.DB) gin.HandlerFunc {
 func createMessageHandler(db *sql.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		roomID := c.Param("id")
-		
+
 		// Get room name from room ID
 		var roomName string
 		err := db.QueryRow("SELECT name FROM rooms WHERE id = ?", roomID).Scan(&roomName)
@@ -253,7 +253,7 @@ func createMessageHandler(db *sql.DB) gin.HandlerFunc {
 			c.JSON(404, gin.H{"error": "Room not found"})
 			return
 		}
-		
+
 		var message struct {
 			Sender  string `json:"sender" binding:"required"`
 			Content string `json:"content" binding:"required"`
@@ -265,7 +265,7 @@ func createMessageHandler(db *sql.DB) gin.HandlerFunc {
 		}
 
 		_, err = db.Exec(`
-			INSERT INTO messages (room, sender, content, timestamp) 
+			INSERT INTO messages (room, sender, content, timestamp)
 			VALUES (?, ?, ?, NOW())
 		`, roomName, message.Sender, message.Content)
 		if err != nil {

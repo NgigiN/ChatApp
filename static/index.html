@@ -665,7 +665,7 @@
         document.getElementById('chat-room-title').textContent = room.name;
         document.getElementById('chat-room-description').textContent = room.description;
         Utils.showModal('#chat-modal');
-        
+
         // Clear previous messages and show loading
         const messagesContainer = document.getElementById('chat-messages');
         messagesContainer.innerHTML = `
@@ -675,14 +675,14 @@
             <p>Please wait while we load the chat history.</p>
           </div>
         `;
-        
+
         try {
           // Load messages from database
           const response = await Utils.apiRequest(`/api/rooms/${room.id}/messages`);
           if (response.success && response.data.length > 0) {
             // Clear loading message
             messagesContainer.innerHTML = '';
-            
+
             // Add messages from database
             response.data.forEach(msg => {
               this.addMessage({
@@ -712,7 +712,7 @@
             </div>
           `;
         }
-        
+
         // Join room via WebSocket
         if (this.ws && this.ws.readyState === WebSocket.OPEN) {
           this.ws.send(JSON.stringify({
@@ -879,7 +879,7 @@
       addMessage(message) {
         console.log('Adding message:', message); // Debug log
         const messagesContainer = document.getElementById('chat-messages');
-        
+
         // Remove welcome message if it exists
         const welcomeMsg = messagesContainer.querySelector('.text-center');
         if (welcomeMsg) {
@@ -888,7 +888,7 @@
 
         const messageElement = document.createElement('div');
         messageElement.className = `message-wrapper ${message.isOwn ? 'own-message' : 'other-message'}`;
-        
+
         if (message.isOwn) {
           // Own message - right aligned, blue bubble
           messageElement.innerHTML = `
