@@ -5,14 +5,29 @@ import (
 	"chat_app/internal/user"
 	"database/sql"
 	"log"
+	"os"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 	"golang.org/x/net/websocket"
 )
 
 func main() {
-	db, err := sql.Open("mysql", "chat:chat@tcp(127.0.0.1:3306)/chat_app")
+	// Load .env (if present) so environment variables are available
+	if err := godotenv.Load(); err != nil {
+		log.Println(".env file not found or couldn't be loaded; falling back to OS environment variables")
+	}
+
+	dbUser := os.Getenv("DB_USER")
+	dbPass := os.Getenv("DB_PASS")
+	dbHost := os.Getenv("DB_HOST")
+	dbName := os.Getenv("DB_NAME")
+	if dbUser == "" || dbPass == "" || dbHost == "" || dbName == "" {
+		log.Fatal("Database credentials are not set in environment variables")
+	}
+	dsn := dbUser + ":" + dbPass + "@tcp(" + dbHost + ")/" + dbName
+	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		log.Fatalf("Error opening database: %v", err)
 	}
