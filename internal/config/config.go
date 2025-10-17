@@ -133,7 +133,6 @@ func NewDatabaseConnection(cfg DatabaseConfig) (*sql.DB, error) {
 	db.SetMaxIdleConns(cfg.MaxIdleConns)
 	db.SetConnMaxLifetime(cfg.MaxLifetime)
 
-	// Test connection
 	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
@@ -148,7 +147,6 @@ func CloseDatabase(db *sql.DB) error {
 	return nil
 }
 
-// NewRedisClient constructs a Redis client based on configuration
 func NewRedisClient(cfg RedisConfig) *redis.Client {
 	dbIndex := cfg.DB
 	client := redis.NewClient(&redis.Options{

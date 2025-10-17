@@ -110,7 +110,6 @@ func (rl *RateLimiter) Allow(key string) bool {
 	now := time.Now()
 	cutoff := now.Add(-rl.window)
 
-	// Clean up old requests
 	if requests, exists := rl.requests[key]; exists {
 		var validRequests []time.Time
 		for _, reqTime := range requests {
@@ -121,12 +120,10 @@ func (rl *RateLimiter) Allow(key string) bool {
 		rl.requests[key] = validRequests
 	}
 
-	// Check if we're under the limit
 	if len(rl.requests[key]) >= rl.limit {
 		return false
 	}
 
-	// Add current request
 	rl.requests[key] = append(rl.requests[key], now)
 	return true
 }
@@ -140,7 +137,6 @@ func (rl *RateLimiter) GetRetryAfter(key string) int {
 		return 0
 	}
 
-	// Find the oldest request within the window
 	now := time.Now()
 	cutoff := now.Add(-rl.window)
 

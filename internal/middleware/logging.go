@@ -24,28 +24,18 @@ func (m *LoggingMiddleware) RequestLogger() gin.HandlerFunc {
 		path := c.Request.URL.Path
 		raw := c.Request.URL.RawQuery
 
-		// Process request
 		c.Next()
-
-		// Calculate latency
 		latency := time.Since(start)
-
-		// Get response status
 		status := c.Writer.Status()
 
-		// Get client IP
 		clientIP := c.ClientIP()
 
-		// Get user agent
 		userAgent := c.Request.UserAgent()
 
-		// Get user ID if available
 		userID, _ := c.Get("user_id")
 
-		// Get username if available
 		username, _ := c.Get("username")
 
-		// Log the request
 		m.logger.Info("HTTP Request",
 			"method", c.Request.Method,
 			"path", path,
@@ -83,7 +73,6 @@ func (m *LoggingMiddleware) ErrorLogger() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Next()
 
-		// Log any errors that occurred
 		if len(c.Errors) > 0 {
 			for _, err := range c.Errors {
 				m.logger.Error("Request Error",
@@ -110,13 +99,10 @@ func (m *LoggingMiddleware) WebSocketLogger() gin.HandlerFunc {
 			"user_agent", c.Request.UserAgent(),
 		)
 
-		// Process request
 		c.Next()
 
-		// Calculate duration
 		duration := time.Since(start)
 
-		// Log WebSocket connection result
 		m.logger.Info("WebSocket Connection Result",
 			"path", path,
 			"duration", duration,

@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 
@@ -21,25 +22,30 @@ func NewValidationMiddleware(logger *logger.Logger) *ValidationMiddleware {
 func (m *ValidationMiddleware) SanitizeInput() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Sanitize query parameters
-		for key, values := range c.Request.URL.Query() {
-			for i, value := range values {
-				values[i] = m.sanitizeString(value)
-			}
-			if len(values) > 0 {
-				c.Request.URL.RawQuery = strings.ReplaceAll(c.Request.URL.RawQuery, key+"="+values[0], key+"="+m.sanitizeString(values[0]))
-			}
-		}
-
-		// Sanitize form data
-		if err := c.Request.ParseForm(); err == nil {
-			for _, values := range c.Request.PostForm {
+		if values, err := url.ParseQuery(c.Request.URL.RawQuery); err == nil {
+			for key, values := range values {
 				for i, value := range values {
 					values[i] = m.sanitizeString(value)
 				}
+				for i, value := range values {
+					values[i] = m.sanitizeString(value)
+				}
+				if len(values) > 0 {
+					c.Request.URL.RawQuery = strings.ReplaceAll(c.Request.URL.RawQuery, key+"="+values[0], key+"="+m.sanitizeString(values[0]))
+				}
 			}
-		}
 
-		c.Next()
+			// Sanitize form data
+			if err := c.Request.ParseForm(); err == nil {
+				for _, values := range c.Request.PostForm {
+					for i, value := range values {
+						values[i] = m.sanitizeString(value)
+					}
+				}
+			}
+
+			c.Next()
+		}
 	}
 }
 
@@ -144,22 +150,17 @@ func (m *ValidationMiddleware) ValidateMessage() gin.HandlerFunc {
 }
 
 func (m *ValidationMiddleware) sanitizeString(input string) string {
-	// Remove potentially dangerous characters
 	input = strings.TrimSpace(input)
 
-	// Remove HTML tags
 	htmlTagRegex := regexp.MustCompile(`<[^>]*>`)
 	input = htmlTagRegex.ReplaceAllString(input, "")
 
-	// Remove script tags and javascript
 	scriptRegex := regexp.MustCompile(`(?i)<script[^>]*>.*?</script>`)
 	input = scriptRegex.ReplaceAllString(input, "")
 
-	// Remove javascript: protocol
 	jsProtocolRegex := regexp.MustCompile(`(?i)javascript:`)
 	input = jsProtocolRegex.ReplaceAllString(input, "")
 
-	// Remove SQL injection patterns
 	sqlInjectionRegex := regexp.MustCompile(`(?i)(union|select|insert|update|delete|drop|create|alter|exec|execute)`)
 	input = sqlInjectionRegex.ReplaceAllString(input, "")
 
@@ -167,19 +168,16 @@ func (m *ValidationMiddleware) sanitizeString(input string) string {
 }
 
 func (m *ValidationMiddleware) isValidUsername(username string) bool {
-	// Username should be 3-50 characters, alphanumeric and underscores only
 	usernameRegex := regexp.MustCompile(`^[a-zA-Z0-9_]{3,50}$`)
 	return usernameRegex.MatchString(username)
 }
 
 func (m *ValidationMiddleware) isValidEmail(email string) bool {
-	// Basic email validation
 	emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
 	return emailRegex.MatchString(email)
 }
 
 func (m *ValidationMiddleware) isValidPassword(password string) bool {
-	// Password should be at least 8 characters, contain at least one letter and one number
 	if len(password) < 8 {
 		return false
 	}
@@ -191,23 +189,16 @@ func (m *ValidationMiddleware) isValidPassword(password string) bool {
 }
 
 func (m *ValidationMiddleware) isValidMessage(content string) bool {
-	// Message should be 1-1000 characters, no excessive whitespace
 	content = strings.TrimSpace(content)
 	if len(content) == 0 || len(content) > 1000 {
 		return false
 	}
 
-	// Check for excessive whitespace
 	whitespaceRegex := regexp.MustCompile(`\s{10,}`)
-	if whitespaceRegex.MatchString(content) {
-		return false
-	}
-
-	return true
+	return !whitespaceRegex.MatchString(content)
 }
 
 func (m *ValidationMiddleware) isValidRoomName(roomName string) bool {
-	// Room name should be 1-100 characters, alphanumeric, spaces, hyphens, underscores
 	roomNameRegex := regexp.MustCompile(`^[a-zA-Z0-9\s\-_]{1,100}$`)
 	return roomNameRegex.MatchString(roomName)
 }
