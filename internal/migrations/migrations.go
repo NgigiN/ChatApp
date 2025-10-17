@@ -218,21 +218,21 @@ func createIndexes(db *sql.DB) error {
 		"CREATE INDEX idx_users_email ON users(email)",
 		"CREATE INDEX idx_users_is_active ON users(is_active)",
 		"CREATE INDEX idx_users_created_at ON users(created_at)",
-		
+
 		// User sessions table indexes
 		"CREATE INDEX idx_user_sessions_token ON user_sessions(token)",
 		"CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id)",
 		"CREATE INDEX idx_user_sessions_expires_at ON user_sessions(expires_at)",
 		"CREATE INDEX idx_user_sessions_is_active ON user_sessions(is_active)",
 		"CREATE UNIQUE INDEX idx_user_sessions_token_active ON user_sessions(token, is_active)",
-		
+
 		// Rooms table indexes
 		"CREATE INDEX idx_rooms_name ON rooms(name)",
 		"CREATE INDEX idx_rooms_created_by ON rooms(created_by)",
 		"CREATE INDEX idx_rooms_is_active ON rooms(is_active)",
 		"CREATE INDEX idx_rooms_is_private ON rooms(is_private)",
 		"CREATE INDEX idx_rooms_created_at ON rooms(created_at)",
-		
+
 		// Messages table indexes - optimized for chat queries
 		"CREATE INDEX idx_messages_room_id ON messages(room_id)",
 		"CREATE INDEX idx_messages_user_id ON messages(user_id)",
@@ -240,7 +240,7 @@ func createIndexes(db *sql.DB) error {
 		"CREATE INDEX idx_messages_room_created ON messages(room_id, created_at)",
 		"CREATE INDEX idx_messages_type ON messages(type)",
 		"CREATE INDEX idx_messages_username ON messages(username)",
-		
+
 		// Room members table indexes
 		"CREATE INDEX idx_room_members_room_id ON room_members(room_id)",
 		"CREATE INDEX idx_room_members_user_id ON room_members(user_id)",

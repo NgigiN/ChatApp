@@ -13,7 +13,7 @@ func SetupRoutes(router *gin.Engine, db interface{}, redis interface{}, logger *
 	// Initialize middleware
 	authMiddleware := middleware.NewAuthMiddleware(nil, logger) // TODO: inject auth service
 	validationMiddleware := middleware.NewValidationMiddleware(logger)
-	rateLimitMiddleware := middleware.NewRateLimitMiddleware(100, 60, logger) // 100 requests per minute
+	rateLimitMiddleware := middleware.NewRateLimitMiddleware(100, 60, logger)
 	securityMiddleware := middleware.NewSecurityMiddleware(logger)
 	loggingMiddleware := middleware.NewLoggingMiddleware(logger)
 
@@ -47,8 +47,8 @@ func SetupRoutes(router *gin.Engine, db interface{}, redis interface{}, logger *
 		// Public routes
 		public := v1.Group("/")
 		{
-			public.POST("/register", validationMiddleware.ValidateUsername(), validationMiddleware.ValidateEmail(), validationMiddleware.ValidatePassword())
-			public.POST("/login", validationMiddleware.ValidateUsername(), validationMiddleware.ValidatePassword())
+			public.POST("/register", validationMiddleware.ValidateEmail(), validationMiddleware.ValidatePassword())
+			public.POST("/login", validationMiddleware.ValidateEmail(), validationMiddleware.ValidatePassword())
 		}
 
 		// Protected routes
@@ -106,7 +106,6 @@ func SetupRoutes(router *gin.Engine, db interface{}, redis interface{}, logger *
 		}
 	}
 
-	// WebSocket endpoint with Redis Pub/Sub for cross-instance broadcasting
 	hub := ws.NewHub()
 	cfg := config.Load()
 	redisClient := config.NewRedisClient(cfg.Redis)
@@ -114,7 +113,6 @@ func SetupRoutes(router *gin.Engine, db interface{}, redis interface{}, logger *
 	go hub.Run()
 	router.GET("/ws", ws.ServeWS(hub))
 
-	// Static files
 	router.Static("/static", "./static")
 	router.StaticFile("/", "./static/index.html")
 }

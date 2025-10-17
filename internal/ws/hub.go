@@ -45,8 +45,8 @@ func (h *Hub) Run() {
 				h.rooms[sub.room] = make(map[*Client]bool)
 			}
 			h.rooms[sub.room][sub.client] = true
-		// update room state in Redis (optional)
-		h.updateRoomState(sub.room, 1)
+			// update room state in Redis (optional)
+			h.updateRoomState(sub.room, 1)
 		case sub := <-h.unregister:
 			if clients, ok := h.rooms[sub.room]; ok {
 				if _, exists := clients[sub.client]; exists {
@@ -57,8 +57,8 @@ func (h *Hub) Run() {
 					}
 				}
 			}
-		// update room state in Redis (optional)
-		h.updateRoomState(sub.room, -1)
+			// update room state in Redis (optional)
+			h.updateRoomState(sub.room, -1)
 		case msg := <-h.broadcast:
 			if clients, ok := h.rooms[msg.room]; ok {
 				for c := range clients {
@@ -104,16 +104,16 @@ func (h *Hub) EnableRedis(client *redis.Client) {
 }
 
 func (h *Hub) updateRoomState(room string, delta int64) {
-    if h.pubsub == nil {
-        return
-    }
-    ctx := context.Background()
-    // Maintain a set of rooms
-    _ = h.pubsub.SAdd(ctx, "rooms", room).Err()
-    // Track member counts per room
-    count, err := h.pubsub.HIncrBy(ctx, "room:members", room, delta).Result()
-    if err == nil && count <= 0 {
-        _ = h.pubsub.HDel(ctx, "room:members", room).Err()
-        _ = h.pubsub.SRem(ctx, "rooms", room).Err()
-    }
+	if h.pubsub == nil {
+		return
+	}
+	ctx := context.Background()
+	// Maintain a set of rooms
+	_ = h.pubsub.SAdd(ctx, "rooms", room).Err()
+	// Track member counts per room
+	count, err := h.pubsub.HIncrBy(ctx, "room:members", room, delta).Result()
+	if err == nil && count <= 0 {
+		_ = h.pubsub.HDel(ctx, "room:members", room).Err()
+		_ = h.pubsub.SRem(ctx, "rooms", room).Err()
+	}
 }

@@ -50,12 +50,10 @@ func (s *Server) HandleWS(conn *websocket.Conn) {
 		conn.Close()
 	}()
 
-	// Default user
 	defaultUser := &user.User{
-		Username: fmt.Sprintf("User_%d", time.Now().Hour()),
+		Username: fmt.Sprintf("DefaultUser_%d", time.Now().Hour()),
 	}
 
-	// Get session
 	session, _ := store.Get(conn.Request(), "session")
 	if username, ok := session.Values["user"].(string); ok {
 		defaultUser.Username = username
@@ -96,14 +94,12 @@ func (s *Server) handleJoinRoom(client *Client, roomName *string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	// Remove the client from the current room
 	if client.roomName != nil {
 		if currentRoom, exists := s.rooms[*client.roomName]; exists {
 			currentRoom.RemoveClient(client)
 		}
 	}
 
-	// Join the new room
 	newRoom, exists := s.rooms[*roomName]
 	if !exists {
 		log.Printf("Room %s does not exist - creating new room", *roomName)
@@ -113,19 +109,16 @@ func (s *Server) handleJoinRoom(client *Client, roomName *string) {
 	newRoom.AddClient(client)
 	client.roomName = roomName
 
-	// Fetch and send the latest messages
 	messages, err := GetMessages(client.db, *roomName)
 	if err != nil {
 		log.Printf("Error fetching messages: %v", err)
 		return
 	}
 
-	// Send messages as history to the client
 	if err := websocket.JSON.Send(client.conn, messages); err != nil {
 		log.Printf("Error sending message history: %v", err)
 	}
 
-	// Notify user of successful join
 	joinMessage := &Message{
 		Type:    "system",
 		Content: fmt.Sprintf("You have joined the room: %s", *roomName),
@@ -144,13 +137,11 @@ func (s *Server) handleMessage(client *Client, msg *Message) {
 	msg.Timestamp = time.Now()
 	msg.Room = roomName
 
-	// Save message in the database
 	if err := SaveMessage(client.db, msg); err != nil {
 		log.Printf("Error saving message: %v", err)
 		return
 	}
 
-	// Broadcast message to the room
 	room, exists := s.rooms[roomName]
 	if exists {
 		room.Broadcast(msg)

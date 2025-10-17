@@ -18,25 +18,18 @@ func NewSecurityMiddleware(logger *logger.Logger) *SecurityMiddleware {
 
 func (m *SecurityMiddleware) SecurityHeaders() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// Prevent clickjacking
 		c.Header("X-Frame-Options", "DENY")
 
-		// Prevent MIME type sniffing
 		c.Header("X-Content-Type-Options", "nosniff")
 
-		// Enable XSS protection
 		c.Header("X-XSS-Protection", "1; mode=block")
 
-		// Strict Transport Security (HTTPS only)
 		c.Header("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
 
-		// Content Security Policy
 		c.Header("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:;")
 
-		// Referrer Policy
 		c.Header("Referrer-Policy", "strict-origin-when-cross-origin")
 
-		// Permissions Policy
 		c.Header("Permissions-Policy", "geolocation=(), microphone=(), camera=()")
 
 		c.Next()
@@ -47,7 +40,6 @@ func (m *SecurityMiddleware) CORS() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.GetHeader("Origin")
 
-		// Allow specific origins (in production, use environment variables)
 		allowedOrigins := []string{
 			"http://localhost:3000",
 			"http://localhost:8080",
@@ -72,7 +64,6 @@ func (m *SecurityMiddleware) CORS() gin.HandlerFunc {
 		c.Header("Access-Control-Allow-Credentials", "true")
 		c.Header("Access-Control-Max-Age", "86400")
 
-		// Handle preflight requests
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
 			return
@@ -122,8 +113,6 @@ func (m *SecurityMiddleware) BlockSuspiciousRequests() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		userAgent := c.GetHeader("User-Agent")
 		path := c.Request.URL.Path
-
-		// Block requests with suspicious user agents
 		suspiciousUserAgents := []string{
 			"sqlmap",
 			"nikto",
@@ -142,7 +131,6 @@ func (m *SecurityMiddleware) BlockSuspiciousRequests() gin.HandlerFunc {
 			}
 		}
 
-		// Block requests to suspicious paths
 		suspiciousPaths := []string{
 			"/admin",
 			"/wp-admin",

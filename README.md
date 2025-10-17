@@ -1,6 +1,6 @@
 # ChatApp
 
-A real-time chat application built with Go and WebSockets, designed for educational environments. Features room-based messaging, user authentication, and a modern responsive web interface.
+A real-time chat application built with Go and WebSockets, designed for educational environments. Features room-based messaging, user authentication,  a modern responsive web interface.
 
 ## Features
 
