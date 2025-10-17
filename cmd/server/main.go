@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,11 +15,18 @@ import (
 	"chat_app/pkg/logger"
 
 	"github.com/gin-gonic/gin"
-	promhttp "github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func main() {
-	cfg := config.Load()
+	var envFile = flag.String("env", "", "Environment file to load (e.g., .env, env.dev)")
+	flag.Parse()
+
+	var cfg *config.Config
+	if *envFile != "" {
+		cfg = config.LoadFromFile(*envFile)
+	} else {
+		cfg = config.Load()
+	}
 
 	logger := logger.New(cfg.Logging.Level, cfg.Logging.Format)
 
@@ -32,8 +40,6 @@ func main() {
 	router.Use(gin.Recovery())
 
 	handlers.SetupRoutes(router, db, nil, logger)
-
-	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	redisClient := config.NewRedisClient(cfg.Redis)
 	_ = redisClient

@@ -30,7 +30,19 @@ run:
 
 .PHONY: migrate
 migrate:
-	@$(GO) run ./cmd/migrate
+	@echo "Running migrations..."
+	@$(GO) run ./cmd/migrate -action=up
+
+.PHONY: migrate-status
+migrate-status:
+	@echo "Checking migration status..."
+	@$(GO) run ./cmd/migrate -action=status
+
+.PHONY: migrate-rollback
+migrate-rollback:
+	@if [ -z "$(steps)" ]; then echo "Usage: make migrate-rollback steps=1"; exit 1; fi
+	@echo "Rolling back $(steps) migration(s)..."
+	@$(GO) run ./cmd/migrate -action=down -steps=$(steps)
 
 .PHONY: test
 test:

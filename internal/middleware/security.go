@@ -2,6 +2,8 @@ package middleware
 
 import (
 	"net/http"
+	"os"
+	"strings"
 
 	"chat_app/pkg/logger"
 
@@ -40,16 +42,24 @@ func (m *SecurityMiddleware) CORS() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.GetHeader("Origin")
 
-		allowedOrigins := []string{
-			"http://localhost:3000",
-			"http://localhost:8080",
-			"http://127.0.0.1:3000",
-			"http://127.0.0.1:8080",
+		// Get allowed origins from environment variable
+		allowedOriginsStr := os.Getenv("CORS_ALLOWED_ORIGINS")
+		var allowedOrigins []string
+
+		if allowedOriginsStr != "" {
+			allowedOrigins = strings.Split(allowedOriginsStr, ",")
+		} else {
+			allowedOrigins = []string{
+				"http://localhost:3000",
+				"http://localhost:8080",
+				"http://127.0.0.1:3000",
+				"http://127.0.0.1:8080",
+			}
 		}
 
 		allowed := false
 		for _, allowedOrigin := range allowedOrigins {
-			if origin == allowedOrigin {
+			if origin == strings.TrimSpace(allowedOrigin) {
 				allowed = true
 				break
 			}

@@ -3,11 +3,13 @@ package config
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -57,6 +59,22 @@ type LoggingConfig struct {
 }
 
 func Load() *Config {
+	if err := godotenv.Load(); err != nil {
+		log.Printf("Warning: .env file not found or could not be loaded: %v", err)
+	}
+
+	return loadConfig()
+}
+
+func LoadFromFile(envFile string) *Config {
+	if err := godotenv.Load(envFile); err != nil {
+		log.Printf("Warning: %s file not found or could not be loaded: %v", envFile, err)
+	}
+
+	return loadConfig()
+}
+
+func loadConfig() *Config {
 	return &Config{
 		Server: ServerConfig{
 			Port:         getEnv("SERVER_PORT", "8000"),

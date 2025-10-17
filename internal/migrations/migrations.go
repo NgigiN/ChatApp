@@ -107,7 +107,7 @@ func updateVersion(db *sql.DB, version int) error {
 
 func createUsersTable(db *sql.DB) error {
 	query := `
-		CREATE TABLE users (
+		CREATE TABLE IF NOT EXISTS users (
 			id INT AUTO_INCREMENT PRIMARY KEY,
 			username VARCHAR(50) UNIQUE NOT NULL,
 			email VARCHAR(255) UNIQUE NOT NULL,
@@ -127,7 +127,7 @@ func dropUsersTable(db *sql.DB) error {
 
 func createUserSessionsTable(db *sql.DB) error {
 	query := `
-		CREATE TABLE user_sessions (
+		CREATE TABLE IF NOT EXISTS user_sessions (
 			id VARCHAR(255) PRIMARY KEY,
 			user_id INT NOT NULL,
 			token VARCHAR(255) UNIQUE NOT NULL,
@@ -147,7 +147,7 @@ func dropUserSessionsTable(db *sql.DB) error {
 
 func createRoomsTable(db *sql.DB) error {
 	query := `
-		CREATE TABLE rooms (
+		CREATE TABLE IF NOT EXISTS rooms (
 			id INT AUTO_INCREMENT PRIMARY KEY,
 			name VARCHAR(100) UNIQUE NOT NULL,
 			description TEXT,
@@ -169,7 +169,7 @@ func dropRoomsTable(db *sql.DB) error {
 
 func createMessagesTable(db *sql.DB) error {
 	query := `
-		CREATE TABLE messages (
+		CREATE TABLE IF NOT EXISTS messages (
 			id INT AUTO_INCREMENT PRIMARY KEY,
 			room_id INT NOT NULL,
 			user_id INT NOT NULL,
@@ -192,7 +192,7 @@ func dropMessagesTable(db *sql.DB) error {
 
 func createRoomMembersTable(db *sql.DB) error {
 	query := `
-		CREATE TABLE room_members (
+		CREATE TABLE IF NOT EXISTS room_members (
 			id INT AUTO_INCREMENT PRIMARY KEY,
 			room_id INT NOT NULL,
 			user_id INT NOT NULL,
@@ -214,44 +214,54 @@ func dropRoomMembersTable(db *sql.DB) error {
 func createIndexes(db *sql.DB) error {
 	indexes := []string{
 		// Users table indexes
-		"CREATE INDEX idx_users_username ON users(username)",
-		"CREATE INDEX idx_users_email ON users(email)",
-		"CREATE INDEX idx_users_is_active ON users(is_active)",
-		"CREATE INDEX idx_users_created_at ON users(created_at)",
+		"CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)",
+		"CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)",
+		"CREATE INDEX IF NOT EXISTS idx_users_is_active ON users(is_active)",
+		"CREATE INDEX IF NOT EXISTS idx_users_created_at ON users(created_at)",
 
 		// User sessions table indexes
-		"CREATE INDEX idx_user_sessions_token ON user_sessions(token)",
-		"CREATE INDEX idx_user_sessions_user_id ON user_sessions(user_id)",
-		"CREATE INDEX idx_user_sessions_expires_at ON user_sessions(expires_at)",
-		"CREATE INDEX idx_user_sessions_is_active ON user_sessions(is_active)",
-		"CREATE UNIQUE INDEX idx_user_sessions_token_active ON user_sessions(token, is_active)",
+		"CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions(token)",
+		"CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id)",
+		"CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON user_sessions(expires_at)",
+		"CREATE INDEX IF NOT EXISTS idx_user_sessions_is_active ON user_sessions(is_active)",
 
 		// Rooms table indexes
-		"CREATE INDEX idx_rooms_name ON rooms(name)",
-		"CREATE INDEX idx_rooms_created_by ON rooms(created_by)",
-		"CREATE INDEX idx_rooms_is_active ON rooms(is_active)",
-		"CREATE INDEX idx_rooms_is_private ON rooms(is_private)",
-		"CREATE INDEX idx_rooms_created_at ON rooms(created_at)",
+		"CREATE INDEX IF NOT EXISTS idx_rooms_name ON rooms(name)",
+		"CREATE INDEX IF NOT EXISTS idx_rooms_created_by ON rooms(created_by)",
+		"CREATE INDEX IF NOT EXISTS idx_rooms_is_active ON rooms(is_active)",
+		"CREATE INDEX IF NOT EXISTS idx_rooms_is_private ON rooms(is_private)",
+		"CREATE INDEX IF NOT EXISTS idx_rooms_created_at ON rooms(created_at)",
 
 		// Messages table indexes - optimized for chat queries
-		"CREATE INDEX idx_messages_room_id ON messages(room_id)",
-		"CREATE INDEX idx_messages_user_id ON messages(user_id)",
-		"CREATE INDEX idx_messages_created_at ON messages(created_at)",
-		"CREATE INDEX idx_messages_room_created ON messages(room_id, created_at)",
-		"CREATE INDEX idx_messages_type ON messages(type)",
-		"CREATE INDEX idx_messages_username ON messages(username)",
+		"CREATE INDEX IF NOT EXISTS idx_messages_room_id ON messages(room_id)",
+		"CREATE INDEX IF NOT EXISTS idx_messages_user_id ON messages(user_id)",
+		"CREATE INDEX IF NOT EXISTS idx_messages_created_at ON messages(created_at)",
+		"CREATE INDEX IF NOT EXISTS idx_messages_room_created ON messages(room_id, created_at)",
+		"CREATE INDEX IF NOT EXISTS idx_messages_type ON messages(type)",
+		"CREATE INDEX IF NOT EXISTS idx_messages_username ON messages(username)",
 
 		// Room members table indexes
-		"CREATE INDEX idx_room_members_room_id ON room_members(room_id)",
-		"CREATE INDEX idx_room_members_user_id ON room_members(user_id)",
-		"CREATE INDEX idx_room_members_is_active ON room_members(is_active)",
-		"CREATE INDEX idx_room_members_joined_at ON room_members(joined_at)",
-		"CREATE UNIQUE INDEX idx_room_members_room_user_active ON room_members(room_id, user_id, is_active)",
+		"CREATE INDEX IF NOT EXISTS idx_room_members_room_id ON room_members(room_id)",
+		"CREATE INDEX IF NOT EXISTS idx_room_members_user_id ON room_members(user_id)",
+		"CREATE INDEX IF NOT EXISTS idx_room_members_is_active ON room_members(is_active)",
+		"CREATE INDEX IF NOT EXISTS idx_room_members_joined_at ON room_members(joined_at)",
+	}
+
+	// Create unique indexes separately (MySQL doesn't support IF NOT EXISTS for unique indexes)
+	uniqueIndexes := []string{
+		"CREATE UNIQUE INDEX IF NOT EXISTS idx_user_sessions_token_active ON user_sessions(token, is_active)",
+		"CREATE UNIQUE INDEX IF NOT EXISTS idx_room_members_room_user_active ON room_members(room_id, user_id, is_active)",
 	}
 
 	for _, index := range indexes {
 		if _, err := db.Exec(index); err != nil {
-			return fmt.Errorf("failed to create index: %w", err)
+			log.Printf("Warning: Failed to create index (may already exist): %v", err)
+		}
+	}
+
+	for _, index := range uniqueIndexes {
+		if _, err := db.Exec(index); err != nil {
+			log.Printf("Warning: Failed to create unique index (may already exist): %v", err)
 		}
 	}
 
@@ -284,4 +294,42 @@ func dropIndexes(db *sql.DB) error {
 	}
 
 	return nil
+}
+
+func GetCurrentVersion(db *sql.DB) (int, error) {
+	return getCurrentVersion(db)
+}
+
+func RollbackMigrations(db *sql.DB, steps int) error {
+	currentVersion, err := getCurrentVersion(db)
+	if err != nil {
+		return fmt.Errorf("failed to get current version: %w", err)
+	}
+
+	targetVersion := currentVersion - steps
+	if targetVersion < 0 {
+		targetVersion = 0
+	}
+
+	for i := len(migrations) - 1; i >= 0; i-- {
+		migration := migrations[i]
+		if migration.Version > targetVersion && migration.Version <= currentVersion {
+			log.Printf("Rolling back migration %d: %s", migration.Version, migration.Name)
+			if err := migration.Down(db); err != nil {
+				return fmt.Errorf("failed to rollback migration %d: %w", migration.Version, err)
+			}
+			if err := removeVersion(db, migration.Version); err != nil {
+				return fmt.Errorf("failed to remove version: %w", err)
+			}
+			log.Printf("Migration %d rolled back successfully", migration.Version)
+		}
+	}
+
+	return nil
+}
+
+func removeVersion(db *sql.DB, version int) error {
+	query := `DELETE FROM migrations WHERE version = ?`
+	_, err := db.Exec(query, version)
+	return err
 }
